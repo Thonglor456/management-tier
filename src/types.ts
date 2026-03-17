@@ -1,0 +1,64 @@
+export type TransactionType = 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'ADJUSTMENT' | 'DIVIDEND';
+export type UserRole = 'ADMIN' | 'USER';
+
+export interface Branch {
+    id: string;
+    name: string;
+    color: string;
+    actualBankBalance?: number; // Real balance in bank account
+    actualCashBalance?: number; // Real balance in cash
+    actualDeliveryBalance?: number; // Real balance in delivery accounts
+}
+
+export interface User {
+    id: string;
+    username: string;
+    name: string;
+    role: UserRole;
+    branchId?: string; // If undefined, can access all (Admin)
+}
+
+export interface Transaction {
+    id: string;
+    branchId: string; // Linked to Branch
+    date: string;
+    type: TransactionType;
+    amount: number;
+    category: string;
+    paymentMethod: string;
+    toAccount?: string;
+    note: string;
+    createdBy: string;
+}
+
+export interface AccountBalance {
+    cash: number;
+    bank: number;
+    delivery: number;
+}
+
+export interface ReconciliationRecord {
+    id: string;
+    branchId: string;
+    date: string; // ISO String
+    items: {
+        accountId: string;
+        systemAmount: number;
+        actualAmount: number;
+        diff: number;
+    }[];
+    totalDiff: number;
+    note?: string;
+    createdBy: string;
+}
+
+export interface Shift {
+    id: string;
+    branchId: string;
+    date: string; // YYYY-MM-DD
+    staffName: string;
+    role: 'Barista' | 'Cashier' | 'Manager' | 'General';
+    shiftTime: 'Morning' | 'Afternoon' | 'FullDay' | 'Night';
+    note?: string;
+    createdBy?: string;
+}

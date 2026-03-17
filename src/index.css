@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-black text-zinc-100 selection:bg-violet-900/50 selection:text-white;
+  }
+}

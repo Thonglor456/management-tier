@@ -155,17 +155,27 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                             </div>
                                             <div>
                                                 <div className="font-medium text-zinc-200 text-sm">{t.category}</div>
-                                                <div className="text-xs text-zinc-500 flex items-center gap-2">
-                                                    {selectedBranchId === 'HQ' && <span className="text-violet-300 bg-violet-900/20 px-1 rounded">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
-                                                    {t.note && <span>• {t.note}</span>}
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${t.type === 'INCOME' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                                                        t.type === 'EXPENSE' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
-                                                            t.type === 'TRANSFER' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                                                                t.type === 'DIVIDEND' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
-                                                                    'bg-zinc-500/20 text-zinc-300 border border-zinc-500/30'
+                                                <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-2 mt-1">
+                                                    {selectedBranchId === 'HQ' && <span className="text-violet-300 bg-violet-900/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-violet-500/20">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
+                                                    
+                                                    {/* Payment Method / Channel */}
+                                                    <span className="flex items-center gap-1 bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
+                                                        {t.paymentMethod === 'cash' ? <TrendingUp size={10} className="text-emerald-400" /> : 
+                                                         t.paymentMethod === 'bank' ? <ArrowRightLeft size={10} className="text-blue-400" /> : 
+                                                         <TrendingUp size={10} className="text-orange-400" />}
+                                                        {t.paymentMethod === 'cash' ? 'เงินสด' : t.paymentMethod === 'bank' ? 'ธนาคาร' : 'Delivery'}
+                                                    </span>
+
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${t.type === 'INCOME' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                        t.type === 'EXPENSE' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                                                            t.type === 'TRANSFER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                                t.type === 'DIVIDEND' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                                                                    'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
                                                         }`}>
                                                         {t.type === 'INCOME' ? 'รายรับ' : t.type === 'EXPENSE' ? 'รายจ่าย' : t.type === 'TRANSFER' ? 'โอนย้าย' : t.type === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
                                                     </span>
+
+                                                    {t.note && <span className="text-zinc-400 italic">" {t.note} "</span>}
                                                 </div>
                                             </div>
                                         </div>

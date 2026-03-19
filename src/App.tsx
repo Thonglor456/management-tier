@@ -96,6 +96,7 @@ export default function TierCoffeeApp() {
   const [showForm, setShowForm] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [lastTransactionDate, setLastTransactionDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Passed to form for editing:
   const editingTransaction = useMemo(() => {
@@ -422,6 +423,8 @@ export default function TierCoffeeApp() {
         setEditingId(null);
       } else {
         await addTransaction(transactionData as any);
+        // Update the sticky date for the next entry
+        setLastTransactionDate(transactionData.date);
       }
       handleCloseForm();
     } catch (error) {
@@ -617,6 +620,7 @@ export default function TierCoffeeApp() {
           currentUser={currentUser}
           incomeCategories={incomeCategories}
           expenseCategories={expenseCategories}
+          lastTransactionDate={lastTransactionDate}
           initialData={editingTransaction ? {
             amount: editingTransaction.amount.toString(),
             date: editingTransaction.date,

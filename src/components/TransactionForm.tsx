@@ -40,6 +40,7 @@ interface TransactionFormProps {
     onEditCategory: (type: TransactionType, oldName: string) => void;
     onDeleteCategory: (type: TransactionType, name: string) => void;
     setTransactionData: (data: any) => void;
+    lastTransactionDate: string;
 }
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -57,11 +58,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     onDelete,
     onAddCategory,
     onEditCategory,
-    onDeleteCategory
+    onDeleteCategory,
+    lastTransactionDate
 }) => {
     // Local state for form fields
     const [amount, setAmount] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [date, setDate] = useState(lastTransactionDate);
     const [category, setCategory] = useState(
         formType === 'TRANSFER' ? 'โอนย้าย' :
             formType === 'DIVIDEND' ? 'ปันผลกำไร (Profit Sharing)' :
@@ -92,7 +94,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             } else {
                 // Reset form
                 setAmount('');
-                setDate(new Date().toISOString().split('T')[0]);
+                setDate(lastTransactionDate);
 
                 const defaultCat = formType === 'INCOME' ? incomeCategories[0] :
                     formType === 'EXPENSE' ? expenseCategories[0] :

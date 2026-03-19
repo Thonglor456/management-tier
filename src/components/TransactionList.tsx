@@ -9,6 +9,8 @@ import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 import Coins from 'lucide-react/dist/esm/icons/coins';
 import Download from 'lucide-react/dist/esm/icons/download';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import X from 'lucide-react/dist/esm/icons/x';
 import type { Transaction, Branch, User } from '../types';
 
 interface TransactionListProps {
@@ -38,10 +40,67 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         currentUser.role === 'ADMIN' || t.createdBy === currentUser.username;
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [filterType, setFilterType] = useState<Transaction['type'] | 'ALL'>('ALL');
+    
+    // Date Filtering State
+    const [startDateFilter, setStartDateFilter] = useState<string>('');
+    const [endDateFilter, setEndDateFilter] = useState<string>('');
+    const [showDateMenu, setShowDateMenu] = useState(false);
+
+    // Helpers for Date Filtering
+    const setToday = () => {
+        const today = new Date().toISOString().split('T')[0];
+        setStartDateFilter(today);
+        setEndDateFilter(today);
+        setShowDateMenu(false);
+    };
+
+    const setYesterday = () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yStr = yesterday.toISOString().split('T')[0];
+        setStartDateFilter(yStr);
+        setEndDateFilter(yStr);
+        setShowDateMenu(false);
+    };
+
+    const setThisWeek = () => {
+        const now = new Date();
+        const first = now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1); // Monday
+        const monday = new Date(now.setDate(first)).toISOString().split('T')[0];
+        setStartDateFilter(monday);
+        setEndDateFilter(new Date().toISOString().split('T')[0]);
+        setShowDateMenu(false);
+    };
+
+    const setThisMonth = () => {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        setStartDateFilter(firstDay);
+        setEndDateFilter(new Date().toISOString().split('T')[0]);
+        setShowDateMenu(false);
+    };
+
+    const clearDateFilter = () => {
+        setStartDateFilter('');
+        setEndDateFilter('');
+        setShowDateMenu(false);
+    };
+
+    // Filter Logic
+    const filteredGroupedTransactions = groupedTransactions.map(group => {
+        const filteredItems = group.items.filter(t => {
+            const matchesType = filterType === 'ALL' || t.type === filterType;
+            const matchesDate = (!startDateFilter || t.date >= startDateFilter) && 
+                                (!endDateFilter || t.date <= endDateFilter);
+            return matchesType && matchesDate;
+        });
+
+        return { ...group, items: filteredItems };
+    }).filter(group => group.items.length > 0);
 
     const handleExport = () => {
-        // Flatten transactions from groups
-        const allTransactions = groupedTransactions.flatMap(g => g.items);
+        // Flatten transactions from filtered groups
+        const allTransactions = filteredGroupedTransactions.flatMap(g => g.items);
 
         if (allTransactions.length === 0) {
             alert('ไม่มีข้อมูลให้ส่งออก');
@@ -93,6 +152,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <button onClick={handleExport} className="text-emerald-400 flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full hover:bg-zinc-800 transition-colors">
                         <Download size={14} /> Export CSV
                     </button>
+                    {/* Filter Mode - Type */}
                     <button onClick={() => setShowFilterMenu(!showFilterMenu)} className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${filterType !== 'ALL' ? 'text-violet-400 border-violet-500/50' : 'text-zinc-400'}`}>
                         <Filter size={14} />
                         {filterType === 'ALL' ? 'ตัวกรอง' :
@@ -102,7 +162,71 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                         filterType === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
                     </button>
 
-                    {/* Filter Menu */}
+                    {/* Date Filter */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowDateMenu(!showDateMenu)}
+                            className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${startDateFilter || endDateFilter ? 'text-violet-400 border-violet-500/50' : 'text-zinc-400'}`}
+                        >
+                            <Calendar size={14} />
+                            {!startDateFilter && !endDateFilter ? 'ปฏิทิน' :
+                                startDateFilter === endDateFilter ? startDateFilter :
+                                    `${startDateFilter} - ${endDateFilter}`}
+                        </button>
+
+                        {showDateMenu && (
+                            <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-20 animate-fade-in p-4">
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button type="button" onClick={setToday} className="text-xs py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg">วันนี้</button>
+                                        <button type="button" onClick={setYesterday} className="text-xs py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg">เมื่อวาน</button>
+                                        <button type="button" onClick={setThisWeek} className="text-xs py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg">สัปดาห์นี้</button>
+                                        <button type="button" onClick={setThisMonth} className="text-xs py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg">เดือนนี้</button>
+                                    </div>
+
+                                    <div className="space-y-2 pt-2 border-t border-zinc-800">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] text-zinc-500 uppercase font-bold">จากวันที่</span>
+                                            <input
+                                                type="date"
+                                                value={startDateFilter}
+                                                onChange={(e) => setStartDateFilter(e.target.value)}
+                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] text-zinc-500 uppercase font-bold">ถึงวันที่</span>
+                                            <input
+                                                type="date"
+                                                value={endDateFilter}
+                                                onChange={(e) => setEndDateFilter(e.target.value)}
+                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={clearDateFilter}
+                                            className="flex-1 text-xs py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded-lg flex items-center justify-center gap-1"
+                                        >
+                                            <X size={12} /> ล้างตาราง
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDateMenu(false)}
+                                            className="flex-1 text-xs py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-bold"
+                                        >
+                                            ตกลง
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Filter Type Menu */}
                     {showFilterMenu && (
                         <div className="absolute top-full right-0 mt-2 w-40 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-20 animate-fade-in">
                             <button onClick={() => { setFilterType('ALL'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'ALL' ? 'text-violet-400 bg-violet-500/10' : 'text-zinc-300'}`}>ทั้งหมด</button>
@@ -116,15 +240,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </div>
             </div>
 
-            {groupedTransactions.length === 0 ? (
+            {filteredGroupedTransactions.length === 0 ? (
                 <div className="p-12 text-center text-zinc-600 bg-zinc-900 rounded-xl border border-zinc-800 border-dashed">
                     <List size={48} className="mx-auto mb-2 opacity-20" />
-                    <p>ไม่พบรายการในสาขานี้</p>
+                    <p>{startDateFilter || endDateFilter || filterType !== 'ALL' ? 'ไม่พบรายการที่ตรงตามเงื่อนไข' : 'ไม่พบรายการในสาขานี้'}</p>
+                    {(startDateFilter || endDateFilter || filterType !== 'ALL') && (
+                        <button onClick={() => { clearDateFilter(); setFilterType('ALL'); }} className="mt-4 text-violet-400 text-sm hover:underline">ล้างการเลือกทั้งหมด</button>
+                    )}
                 </div>
             ) : (
-                groupedTransactions.map(group => {
-                    // Filter items within the group
-                    const filteredItems = filterType === 'ALL' ? group.items : group.items.filter(t => t.type === filterType);
+                filteredGroupedTransactions.map(group => {
+                    const filteredItems = group.items;
 
                     if (filteredItems.length === 0) return null;
 

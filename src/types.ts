@@ -67,6 +67,17 @@ export interface Shift {
     createdBy?: string;
 }
 
+export interface Withdrawal {
+    id: string;
+    staffId: string;
+    staffName: string;
+    branchId: string;
+    date: string; // ISO String
+    amount: number;
+    month: string; // YYYY-MM
+    createdBy: string;
+}
+
 export interface Staff {
     id: string;
     name: string;

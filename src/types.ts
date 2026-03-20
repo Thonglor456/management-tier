@@ -59,6 +59,17 @@ export interface Shift {
     staffName: string;
     role: 'Barista' | 'Cashier' | 'Manager' | 'General';
     shiftTime: 'Morning' | 'Afternoon' | 'FullDay' | 'Night';
+    wage: number;
+    status: 'PRESENT' | 'ABSENT';
+    paid: boolean;
+    paidAt?: string;
     note?: string;
     createdBy?: string;
+}
+
+export interface Staff {
+    id: string;
+    name: string;
+    defaultWage: number;
+    branchId: string;
 }

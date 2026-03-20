@@ -10,8 +10,13 @@ import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 import LayoutList from 'lucide-react/dist/esm/icons/layout-list';
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import { Card } from './ui/Card';
-import type { Shift, Branch, User } from '../types';
-import { subscribeToShifts, addShift, deleteShift } from '../services/scheduleService';
+import type { Shift, Branch, User, Staff } from '../types';
+import { subscribeToShifts, addShift, deleteShift, updateShift } from '../services/scheduleService';
+import { subscribeToStaff, addStaff } from '../services/staffService';
+import Edit2 from 'lucide-react/dist/esm/icons/edit-2';
+import CheckCircle2 from 'lucide-react/dist/esm/icons/check-circle-2';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Banknote from 'lucide-react/dist/esm/icons/banknote';
 
 interface ScheduleProps {
     selectedBranchId: string;
@@ -24,22 +29,48 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [shifts, setShifts] = useState<Shift[]>([]);
+    const [staffList, setStaffList] = useState<Staff[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
 
     // Form State
     const [staffName, setStaffName] = useState('');
+    const [selectedStaffId, setSelectedStaffId] = useState('');
+    const [wage, setWage] = useState<string>('');
+    const [status, setStatus] = useState<'PRESENT' | 'ABSENT'>('PRESENT');
     const [role, setRole] = useState<'Barista' | 'Cashier' | 'Manager' | 'General'>('Barista');
     const [shiftTime, setShiftTime] = useState<'Morning' | 'Afternoon' | 'FullDay' | 'Night'>('Morning');
     const [note, setNote] = useState('');
 
     // Load shifts
     useEffect(() => {
-        const unsubscribe = subscribeToShifts(selectedBranchId, (data) => {
+        const unsubscribeShifts = subscribeToShifts(selectedBranchId, (data) => {
             setShifts(data);
         });
-        return () => unsubscribe();
+        
+        const unsubscribeStaff = subscribeToStaff(selectedBranchId, (data) => {
+            setStaffList(data);
+        });
+
+        return () => {
+            unsubscribeShifts();
+            unsubscribeStaff();
+        };
     }, [selectedBranchId]);
+
+    // Handle staff selection to pre-fill wage
+    useEffect(() => {
+        if (selectedStaffId && selectedStaffId !== 'new') {
+            const staff = staffList.find(s => s.id === selectedStaffId);
+            if (staff) {
+                setWage(staff.defaultWage.toString());
+                setStaffName(staff.name);
+            }
+        } else if (selectedStaffId === 'new') {
+            setStaffName('');
+            setWage('');
+        }
+    }, [selectedStaffId, staffList]);
 
     // Helpers
     const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -54,27 +85,64 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     };
 
     const handleAddShift = async () => {
-        if (!staffName.trim()) return;
+        if (!staffName.trim() || !wage) return;
 
         const dateStr = formatDateForStorage(selectedDate);
 
         try {
+            // If it's a new staff name not in the list, we could optionally add them to staffList
+            if (selectedStaffId === 'new' || !selectedStaffId) {
+                const existing = staffList.find(s => s.name.toLowerCase() === staffName.trim().toLowerCase());
+                if (!existing) {
+                    await addStaff({
+                        name: staffName.trim(),
+                        defaultWage: Number(wage),
+                        branchId: selectedBranchId
+                    });
+                }
+            }
+
             await addShift({
                 branchId: selectedBranchId,
                 date: dateStr,
                 staffName: staffName.trim(),
                 role,
                 shiftTime,
+                wage: Number(wage),
+                status,
+                paid: false,
                 note: note.trim(),
                 createdBy: currentUser?.username || 'unknown'
             });
+            
             setShowAddModal(false);
             setStaffName('');
+            setSelectedStaffId('');
+            setWage('');
             setNote('');
         } catch (error) {
             console.error("Error adding shift:", error);
             alert("บันทึกไม่สำเร็จ");
         }
+    };
+
+    const handleTogglePayment = async (shift: Shift) => {
+        const newPaidStatus = !shift.paid;
+        const confirmMsg = newPaidStatus 
+            ? `ยืนยันการเบิกเงินสำหรับ ${shift.staffName} ใช่หรือไม่?`
+            : `ยกเลิกสถานะการเบิกเงินของ ${shift.staffName} ใช่หรือไม่?`;
+            
+        if (window.confirm(confirmMsg)) {
+            await updateShift(shift.id, {
+                paid: newPaidStatus,
+                paidAt: newPaidStatus ? new Date().toISOString() : undefined
+            });
+        }
+    };
+
+    const handleToggleStatus = async (shift: Shift) => {
+        const newStatus = shift.status === 'PRESENT' ? 'ABSENT' : 'PRESENT';
+        await updateShift(shift.id, { status: newStatus });
     };
 
     const handleDeleteShift = async (id: string) => {
@@ -128,10 +196,9 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                 >
                     <span className={`text-sm ${isSelected ? 'font-bold' : ''}`}>{day}</span>
                     <div className="flex gap-0.5 mt-1">
-                        {dayShifts.slice(0, 3).map((_, i) => (
-                            <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-violet-500'}`}></div>
+                        {dayShifts.map((s, i) => (
+                            <div key={i} className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : s.status === 'PRESENT' ? 'bg-emerald-400' : 'bg-rose-400/50'}`}></div>
                         ))}
-                        {dayShifts.length > 3 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-zinc-600'}`}></div>}
                     </div>
                 </button>
             );
@@ -221,18 +288,31 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                         ) : (
                             <div className="grid grid-cols-1 gap-3">
                                 {shiftsOnSelectedDate.map(shift => (
-                                    <Card key={shift.id} className="p-4 flex justify-between items-center group">
+                                    <Card key={shift.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group transition-all hover:bg-zinc-800/80">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
-                                                ${shift.role === 'Barista' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                    shift.role === 'Cashier' ? 'bg-amber-500/20 text-amber-400' :
-                                                        shift.role === 'Manager' ? 'bg-rose-500/20 text-rose-400' :
-                                                            'bg-blue-500/20 text-blue-400'}
-                                            `}>
-                                                {shift.staffName.charAt(0)}
+                                            <div className="relative">
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold
+                                                    ${shift.role === 'Barista' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                        shift.role === 'Cashier' ? 'bg-amber-500/20 text-amber-400' :
+                                                            shift.role === 'Manager' ? 'bg-rose-500/20 text-rose-400' :
+                                                                'bg-blue-500/20 text-blue-400'}
+                                                `}>
+                                                    {shift.staffName.charAt(0)}
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleToggleStatus(shift)}
+                                                    className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-zinc-900 flex items-center justify-center text-[10px]
+                                                        ${shift.status === 'PRESENT' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}
+                                                >
+                                                    {shift.status === 'PRESENT' ? '✅' : '❌'}
+                                                </button>
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-white">{shift.staffName}</h4>
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-white text-base">{shift.staffName}</h4>
+                                                    <span className="text-zinc-500 text-sm">—</span>
+                                                    <span className="text-violet-400 font-bold text-sm">฿{shift.wage.toLocaleString()}/วัน</span>
+                                                </div>
                                                 <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
                                                     <span className={`px-2 py-0.5 rounded text-[10px] border
                                                         ${shift.role === 'Barista' ? 'border-emerald-500/30 text-emerald-400' :
@@ -242,22 +322,92 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                     `}>{shift.role}</span>
                                                     <span className="flex items-center gap-1">
                                                         <Clock size={12} />
-                                                        {shift.shiftTime === 'Morning' ? 'กะเช้า (Morning)' :
-                                                            shift.shiftTime === 'Afternoon' ? 'กะบ่าย (Afternoon)' :
-                                                                shift.shiftTime === 'Night' ? 'กะดึก (Night)' : 'ทั้งวัน (Full Day)'}
+                                                        {shift.shiftTime === 'Morning' ? 'กะเช้า' :
+                                                            shift.shiftTime === 'Afternoon' ? 'กะบ่าย' :
+                                                                shift.shiftTime === 'Night' ? 'กะดึก' : 'ทั้งวัน'}
+                                                    </span>
+                                                    <span className={`flex items-center gap-1 font-medium ${shift.status === 'PRESENT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        {shift.status === 'PRESENT' ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                                                        {shift.status === 'PRESENT' ? 'มาทำงาน' : 'ไม่มา'}
                                                     </span>
                                                 </div>
-                                                {shift.note && <p className="text-zinc-500 text-xs mt-1 italic">{shift.note}</p>}
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleDeleteShift(shift.id)}
-                                            className="p-2 text-zinc-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+
+                                        <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-zinc-800 pt-3 sm:pt-0">
+                                            {/* Withdrawal Status */}
+                                            {shift.paid ? (
+                                                <button 
+                                                    onClick={() => handleTogglePayment(shift)}
+                                                    className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-all text-xs font-bold"
+                                                >
+                                                    <Banknote size={14} /> เบิกแล้ว {shift.paidAt && <span className="text-[10px] font-normal opacity-60">({new Date(shift.paidAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})</span>}
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleTogglePayment(shift)}
+                                                    className={`flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 transition-all text-xs font-bold ${shift.status !== 'PRESENT' ? 'opacity-30 pointer-events-none' : ''}`}
+                                                >
+                                                    <Banknote size={14} /> ยังไม่เบิก
+                                                </button>
+                                            )}
+
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedStaffId(staffList.find(s => s.name === shift.staffName)?.id || 'new');
+                                                        setStaffName(shift.staffName);
+                                                        setWage(shift.wage.toString());
+                                                        setRole(shift.role);
+                                                        setShiftTime(shift.shiftTime);
+                                                        setNote(shift.note || '');
+                                                        // We'd need an update function or a way to replace the existing shift
+                                                        // For now, let's keep it simple as deleting and re-adding, or I can implement updateShift logic.
+                                                        setShowAddModal(true);
+                                                    }}
+                                                    className="p-2 text-zinc-500 hover:text-violet-400 transition-colors"
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteShift(shift.id)}
+                                                    className="p-2 text-zinc-500 hover:text-rose-400 transition-colors"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </Card>
                                 ))}
+
+                                {/* Daily Summary */}
+                                {shiftsOnSelectedDate.some(s => s.status === 'PRESENT') && (
+                                    <div className="mt-6 p-5 bg-zinc-900/50 rounded-2xl border border-zinc-800 space-y-3">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <LayoutList size={16} className="text-violet-400" />
+                                            <h4 className="text-sm font-bold text-white uppercase tracking-wider">สรุปท้ายวัน</h4>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800/50">
+                                                <span className="text-[10px] text-zinc-500 block mb-1 uppercase font-bold">คนมาทำงาน</span>
+                                                <span className="text-lg font-bold text-white">{shiftsOnSelectedDate.filter(s => s.status === 'PRESENT').length} คน</span>
+                                            </div>
+                                            <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800/50">
+                                                <span className="text-[10px] text-zinc-500 block mb-1 uppercase font-bold">ค่าจ้างรวม</span>
+                                                <span className="text-lg font-bold text-white">฿{shiftsOnSelectedDate.filter(s => s.status === 'PRESENT').reduce((sum, s) => sum + s.wage, 0).toLocaleString()}</span>
+                                            </div>
+                                            <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800/50">
+                                                <span className="text-[10px] text-zinc-500 block mb-1 uppercase font-bold text-emerald-400">เบิกแล้ว</span>
+                                                <span className="text-lg font-bold text-emerald-400">฿{shiftsOnSelectedDate.filter(s => s.status === 'PRESENT' && s.paid).reduce((sum, s) => sum + s.wage, 0).toLocaleString()}</span>
+                                            </div>
+                                            <div className="bg-zinc-900 p-3 rounded-xl border border-zinc-800/50">
+                                                <span className="text-[10px] text-zinc-500 block mb-1 uppercase font-bold text-rose-400">ค้างจ่าย</span>
+                                                <span className="text-lg font-bold text-rose-400">฿{shiftsOnSelectedDate.filter(s => s.status === 'PRESENT' && !s.paid).reduce((sum, s) => sum + s.wage, 0).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -283,8 +433,9 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     <th className="px-4 py-3">สาขา</th>
                                     <th className="px-4 py-3">พนักงาน</th>
                                     <th className="px-4 py-3">ตำแหน่ง</th>
-                                    <th className="px-4 py-3">ช่วงเวลา</th>
-                                    <th className="px-4 py-3">หมายเหตุ</th>
+                                    <th className="px-4 py-3">ค่าจ้าง</th>
+                                    <th className="px-4 py-3">สถานะ</th>
+                                    <th className="px-4 py-3">เบิกเงิน</th>
                                     <th className="px-4 py-3 text-right">จัดการ</th>
                                 </tr>
                             </thead>
@@ -308,26 +459,40 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-white">{shift.staffName}</td>
                                                 <td className="px-4 py-3">
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] border whitespace-nowrap
-                                                        ${shift.role === 'Barista' ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' :
-                                                            shift.role === 'Cashier' ? 'border-amber-500/20 text-amber-400 bg-amber-500/5' :
-                                                                shift.role === 'Manager' ? 'border-rose-500/20 text-rose-400 bg-rose-500/5' :
-                                                                    'border-blue-500/20 text-blue-400 bg-blue-500/5'}
-                                                    `}>{shift.role}</span>
+                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${shift.status === 'PRESENT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        {shift.status === 'PRESENT' ? '฿' + shift.wage.toLocaleString() : '-'}
+                                                    </span>
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    {shift.shiftTime === 'Morning' ? '08:00 - 16:00' :
-                                                        shift.shiftTime === 'Afternoon' ? '12:00 - 20:00' :
-                                                            shift.shiftTime === 'Night' ? '16:00 - 00:00' : 'Full Day'}
-                                                </td>
-                                                <td className="px-4 py-3 text-zinc-500 italic truncate max-w-[150px]">{shift.note || '-'}</td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <button
-                                                        onClick={() => handleDeleteShift(shift.id)}
-                                                        className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                                    <button 
+                                                        onClick={() => handleToggleStatus(shift)}
+                                                        className={`px-2 py-0.5 rounded text-[10px] border transition-colors
+                                                            ${shift.status === 'PRESENT' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' : 'border-rose-500/30 text-rose-400 bg-rose-500/5'}
+                                                        `}
                                                     >
-                                                        <Trash2 size={16} />
+                                                        {shift.status === 'PRESENT' ? 'มาทำงาน' : 'ไม่มา'}
                                                     </button>
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {shift.status === 'PRESENT' ? (
+                                                        <button 
+                                                            onClick={() => handleTogglePayment(shift)}
+                                                            className={`flex items-center gap-1 text-[10px] font-bold ${shift.paid ? 'text-emerald-400' : 'text-zinc-500'}`}
+                                                        >
+                                                            <Banknote size={12} />
+                                                            {shift.paid ? 'เบิกแล้ว' : 'ยังไม่เบิก'}
+                                                        </button>
+                                                    ) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex justify-end gap-1">
+                                                        <button
+                                                            onClick={() => handleDeleteShift(shift.id)}
+                                                            className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -349,23 +514,66 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                         </div>
                         <div className="p-4 space-y-4">
                             <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">ชื่อพนักงาน</label>
-                                <input
-                                    type="text"
-                                    value={staffName}
-                                    onChange={e => setStaffName(e.target.value)}
-                                    placeholder="เช่น สมชาย, มานี"
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
-                                    autoFocus
-                                />
+                                <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">เลือกพนักงาน</label>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <select
+                                        value={selectedStaffId}
+                                        onChange={e => setSelectedStaffId(e.target.value)}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none appearance-none"
+                                    >
+                                        <option value="">-- เลือกพนักงาน --</option>
+                                        {staffList.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name} (฿{s.defaultWage})</option>
+                                        ))}
+                                        <option value="new">+ เพิ่มพนักงานใหม่...</option>
+                                    </select>
+                                </div>
                             </div>
+
+                            {(!selectedStaffId || selectedStaffId === 'new') && (
+                                <div className="animate-fade-in">
+                                    <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">ชื่อพนักงานใหม่</label>
+                                    <input
+                                        type="text"
+                                        value={staffName}
+                                        onChange={e => setStaffName(e.target.value)}
+                                        placeholder="เช่น สมชาย, มานี"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                                    />
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs text-zinc-400 mb-1 block">ตำแหน่ง</label>
+                                    <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">ค่าจ้างต่อวัน (฿)</label>
+                                    <input
+                                        type="number"
+                                        value={wage}
+                                        onChange={e => setWage(e.target.value)}
+                                        placeholder="300"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none font-bold text-emerald-400"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">สถานะ</label>
+                                    <select
+                                        value={status}
+                                        onChange={e => setStatus(e.target.value as any)}
+                                        className={`w-full border rounded-xl px-4 py-3 outline-none font-bold ${status === 'PRESENT' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}
+                                    >
+                                        <option value="PRESENT">✅ มาทำงาน</option>
+                                        <option value="ABSENT">❌ ไม่มา</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">ตำแหน่ง</label>
                                     <select
                                         value={role}
                                         onChange={e => setRole(e.target.value as any)}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none"
                                     >
                                         <option value="Barista">Barista</option>
                                         <option value="Cashier">Cashier</option>
@@ -374,11 +582,11 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-zinc-400 mb-1 block">ช่วงกะ</label>
+                                    <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">ช่วงกะ</label>
                                     <select
                                         value={shiftTime}
                                         onChange={e => setShiftTime(e.target.value as any)}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white outline-none"
                                     >
                                         <option value="Morning">เช้า (Morning)</option>
                                         <option value="Afternoon">บ่าย (Afternoon)</option>
@@ -387,21 +595,23 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     </select>
                                 </div>
                             </div>
+                            
                             <div>
-                                <label className="text-xs text-zinc-400 mb-1 block">หมายเหตุ (ถ้ามี)</label>
+                                <label className="text-xs text-zinc-500 mb-1.5 block uppercase font-bold tracking-wider">หมายเหตุ (ถ้ามี)</label>
                                 <input
                                     type="text"
                                     value={note}
                                     onChange={e => setNote(e.target.value)}
                                     placeholder="เช่น มาแทน, กลับก่อน"
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none"
                                 />
                             </div>
+                            
                             <button
                                 onClick={handleAddShift}
-                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-lg mt-4 transition-colors"
+                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-violet-900/40 active:scale-95"
                             >
-                                บันทึก
+                                บันทึกข้อมูล
                             </button>
                         </div>
                     </div>

@@ -50,14 +50,14 @@ export const getPastDate = (days: number) => {
 // Initial Data Distributed across branches
 export const INITIAL_TRANSACTIONS: Transaction[] = [
     // Siam (B01)
-    { id: '1', branchId: 'B01', date: getPastDate(0), type: 'INCOME', amount: 1250, category: 'เครื่องดื่ม', paymentMethod: 'cash', note: 'ช่วงเช้าลูกค้าแน่น', createdBy: 'siam' },
-    { id: '2', branchId: 'B01', date: getPastDate(0), type: 'EXPENSE', amount: 500, category: 'น้ำแข็ง/ก๊าซ', paymentMethod: 'cash', note: 'น้ำแข็งหมด', createdBy: 'siam' },
-    { id: '3', branchId: 'B01', date: getPastDate(1), type: 'INCOME', amount: 5400, category: 'เครื่องดื่ม', paymentMethod: 'bank', note: 'ยอดขายทั้งวัน', createdBy: 'siam' },
+    { id: '1', branchId: 'B01', date: getPastDate(0), type: 'INCOME', name: 'รายรับการขาย', amount: 1250, category: 'เครื่องดื่ม', paymentMethod: 'cash', note: 'ช่วงเช้าลูกค้าแน่น', createdBy: 'siam' },
+    { id: '2', branchId: 'B01', date: getPastDate(0), type: 'EXPENSE', name: 'ซื้อน้ำแข็ง', amount: 500, category: 'น้ำแข็ง/ก๊าซ', paymentMethod: 'cash', note: 'น้ำแข็งหมด', createdBy: 'siam' },
+    { id: '3', branchId: 'B01', date: getPastDate(1), type: 'INCOME', name: 'รายรับการขาย', amount: 5400, category: 'เครื่องดื่ม', paymentMethod: 'bank', note: 'ยอดขายทั้งวัน', createdBy: 'siam' },
 
     // Ari (B02)
-    { id: '4', branchId: 'B02', date: getPastDate(0), type: 'INCOME', amount: 3200, category: 'เครื่องดื่ม', paymentMethod: 'delivery', note: 'Grab Food ปังมาก', createdBy: 'ari' },
-    { id: '5', branchId: 'B02', date: getPastDate(1), type: 'EXPENSE', amount: 15000, category: 'ค่าเช่าสถานที่', paymentMethod: 'bank', note: 'ค่าเช่าเดือนนี้', createdBy: 'ari' },
+    { id: '4', branchId: 'B02', date: getPastDate(0), type: 'INCOME', name: 'รายรับ Grab', amount: 3200, category: 'เครื่องดื่ม', paymentMethod: 'delivery', note: 'Grab Food ปังมาก', createdBy: 'ari' },
+    { id: '5', branchId: 'B02', date: getPastDate(1), type: 'EXPENSE', name: 'จ่ายค่าเช่า', amount: 15000, category: 'ค่าเช่าสถานที่', paymentMethod: 'bank', note: 'ค่าเช่าเดือนนี้', createdBy: 'ari' },
 
     // Thong Lo (B03)
-    { id: '6', branchId: 'B03', date: getPastDate(0), type: 'INCOME', amount: 8500, category: 'สินค้าฝากขาย', paymentMethod: 'bank', note: 'ขายเมล็ดกาแฟ Lot ใหม่', createdBy: 'admin' },
+    { id: '6', branchId: 'B03', date: getPastDate(0), type: 'INCOME', name: 'ขายเมล็ดกาแฟ', amount: 8500, category: 'สินค้าฝากขาย', paymentMethod: 'bank', note: 'ขายเมล็ดกาแฟ Lot ใหม่', createdBy: 'admin' },
 ];

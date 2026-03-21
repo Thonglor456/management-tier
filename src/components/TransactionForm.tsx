@@ -30,6 +30,7 @@ interface TransactionFormProps {
         category: string;
         paymentMethod: string;
         toAccount: string;
+        name: string; // Add name field
         note: string;
         branchId?: string; // Add optional branchId to initialData
     };
@@ -71,6 +72,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     );
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [toAccount, setToAccount] = useState('bank');
+    const [name, setName] = useState('');
     const [note, setNote] = useState('');
     const [isManagingCats, setIsManagingCats] = useState(false);
 
@@ -88,6 +90,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 setCategory(initialData.category);
                 setPaymentMethod(initialData.paymentMethod);
                 setToAccount(initialData.toAccount || 'bank');
+                setName(initialData.name || '');
                 setNote(initialData.note);
                 // Use the transaction's branch, or fallback to selected
                 setFormBranchId(initialData.branchId || selectedBranchId);
@@ -104,6 +107,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
                 setPaymentMethod('cash');
                 setToAccount('bank');
+                setName('');
                 setNote('');
 
                 // Keep the currently selected branch if it's valid (not HQ)
@@ -138,6 +142,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             category,
             paymentMethod,
             toAccount,
+            name,
             note,
             branchId: formBranchId // Pass the selected branch ID
         });
@@ -178,8 +183,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
                     </div>
                     <div>
+                        <label className="block text-sm font-medium text-zinc-400 mb-1">รายการ (ชื่อ)</label>
+                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500 transition-all font-bold" placeholder="เช่น น้ำแข็ง, ยอดขายหน้าร้าน..." />
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">จำนวนเงิน (บาท)</label>
-                        <input type="number" autoFocus required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-violet-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
+                        <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-violet-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
                     </div>
 
                     {formType !== 'TRANSFER' && formType !== 'DIVIDEND' && (

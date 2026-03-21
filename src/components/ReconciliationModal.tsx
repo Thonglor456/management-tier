@@ -128,6 +128,7 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
                     branchId: selectedBranchId,
                     date: today,
                     type: 'ADJUSTMENT',
+                    name: `ตัวปรับยอด (${adj.accName})`,
                     amount: adj.diff, // Signed amount
                     category: 'Balance Adjustment (ยกยอด)',
                     paymentMethod: adj.accId,

@@ -23,11 +23,12 @@ export interface Transaction {
     branchId: string; // Linked to Branch
     date: string;
     type: TransactionType;
+    name: string;      // Specific item name/title
     amount: number;
-    category: string;
+    category: string;  // Grouping category
     paymentMethod: string;
     toAccount?: string;
-    note: string;
+    note: string;      // Additional details
     createdBy: string;
 }
 

@@ -9,9 +9,11 @@ import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 import Coins from 'lucide-react/dist/esm/icons/coins';
 import Download from 'lucide-react/dist/esm/icons/download';
+import Upload from 'lucide-react/dist/esm/icons/upload';
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import X from 'lucide-react/dist/esm/icons/x';
 import type { Transaction, Branch, User } from '../types';
+import { ImportModal } from './ImportModal';
 
 interface TransactionListProps {
     groupedTransactions: { date: string, items: Transaction[] }[];
@@ -23,6 +25,10 @@ interface TransactionListProps {
     formatDateThai: (dateStr: string) => string;
     onEdit: (t: Transaction) => void;
     onDelete: (id: string) => void;
+    // Import props
+    allTransactions?: Transaction[];
+    onImportTransactions?: (transactions: Omit<Transaction, 'id'>[], datesToOverwrite: string[]) => Promise<void>;
+    onBulkCleanup?: (year: number) => Promise<void>;
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({
@@ -34,8 +40,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     formatCurrency,
     formatDateThai,
     onEdit,
-    onDelete
+    onDelete,
+    allTransactions = [],
+    onImportTransactions,
+    onBulkCleanup,
 }) => {
+    const [showImportModal, setShowImportModal] = useState(false);
     const canEdit = (t: Transaction) =>
         currentUser.role === 'ADMIN' || t.createdBy === currentUser.username;
     const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -149,6 +159,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-zinc-200">ประวัติรายการ {selectedBranchId !== 'HQ' && <span className="text-violet-400 text-sm font-normal">({currentBranchName})</span>}</h3>
                 <div className="flex gap-2 relative">
+                    {onImportTransactions && (
+                        <button onClick={() => setShowImportModal(true)} className="text-violet-400 flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full hover:bg-zinc-800 transition-colors">
+                            <Upload size={14} /> 📥 นำเข้า Sheet
+                        </button>
+                    )}
                     <button onClick={handleExport} className="text-emerald-400 flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full hover:bg-zinc-800 transition-colors">
                         <Download size={14} /> Export CSV
                     </button>
@@ -280,11 +295,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                 {t.type === 'INCOME' ? <TrendingUp size={16} /> : t.type === 'EXPENSE' ? <TrendingDown size={16} /> : t.type === 'TRANSFER' ? <ArrowRightLeft size={16} /> : t.type === 'DIVIDEND' ? <Coins size={16} /> : <RefreshCw size={16} />}
                                             </div>
                                             <div>
-                                                <div className="font-medium text-zinc-200 text-sm">{t.category}</div>
+                                                <div className="font-medium text-zinc-200 text-sm">
+                                                    {t.name || t.note || t.category}
+                                                </div>
                                                 <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-2 mt-1">
                                                     {selectedBranchId === 'HQ' && <span className="text-violet-300 bg-violet-900/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-violet-500/20">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
                                                     
-                                                    {/* Payment Method / Channel */}
+                                                    {/* 1. Payment Method / Channel */}
                                                     <span className="flex items-center gap-1 bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
                                                         {t.paymentMethod === 'cash' ? <TrendingUp size={10} className="text-emerald-400" /> : 
                                                          t.paymentMethod === 'bank' ? <ArrowRightLeft size={10} className="text-blue-400" /> : 
@@ -292,6 +309,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                         {t.paymentMethod === 'cash' ? 'เงินสด' : t.paymentMethod === 'bank' ? 'ธนาคาร' : 'Delivery'}
                                                     </span>
 
+                                                    {/* 2. Type Badge */}
                                                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${t.type === 'INCOME' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                                                         t.type === 'EXPENSE' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
                                                             t.type === 'TRANSFER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
@@ -301,7 +319,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                         {t.type === 'INCOME' ? 'รายรับ' : t.type === 'EXPENSE' ? 'รายจ่าย' : t.type === 'TRANSFER' ? 'โอนย้าย' : t.type === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
                                                     </span>
 
-                                                    {t.note && <span className="text-zinc-400 italic">" {t.note} "</span>}
+                                                    {/* 3. Category Badge */}
+                                                    <span className="bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
+                                                        {t.category}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -330,6 +351,18 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         </div>
                     );
                 })
+            )}
+            {/* Import Modal */}
+            {onImportTransactions && (
+                <ImportModal
+                    show={showImportModal}
+                    onClose={() => setShowImportModal(false)}
+                    selectedBranchId={selectedBranchId}
+                    existingTransactions={allTransactions}
+                    currentUser={currentUser.username}
+                    onImport={onImportTransactions}
+                    onBulkCleanup={onBulkCleanup}
+                />
             )}
         </div>
     );

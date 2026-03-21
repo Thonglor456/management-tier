@@ -10,6 +10,13 @@ import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 import LayoutList from 'lucide-react/dist/esm/icons/layout-list';
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import { Card } from './ui/Card';
+import {
+    doc,
+    updateDoc,
+    serverTimestamp,
+    deleteField
+} from 'firebase/firestore';
+import { db } from '../firebase';
 import type { Shift, Branch, User, Staff, Withdrawal } from '../types';
 import { subscribeToShifts, addShift, deleteShift, updateShift } from '../services/scheduleService';
 import { subscribeToStaff, addStaff } from '../services/staffService';
@@ -37,6 +44,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     const [staffList, setStaffList] = useState<Staff[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
     const [showWithdrawModal, setShowWithdrawModal] = useState<{show: boolean, staff?: Staff}>({show: false});
     const [showHistoryModal, setShowHistoryModal] = useState<{show: boolean, staff?: Staff}>({show: false});
     const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
@@ -117,42 +125,59 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                 }
             }
 
-            await addShift({
-                branchId: selectedBranchId,
-                date: dateStr,
-                staffName: staffName.trim(),
-                role,
-                shiftTime,
-                wage: Number(wage),
-                status,
-                paid: false,
-                note: note.trim(),
-                createdBy: currentUser?.username || 'unknown'
-            });
+            if (editingShiftId) {
+                await updateShift(editingShiftId, {
+                    staffName: staffName.trim(),
+                    role,
+                    shiftTime,
+                    wage: Number(wage),
+                    status,
+                    note: note.trim()
+                });
+            } else {
+                await addShift({
+                    branchId: selectedBranchId,
+                    date: dateStr,
+                    staffName: staffName.trim(),
+                    role,
+                    shiftTime,
+                    wage: Number(wage),
+                    status,
+                    paid: false,
+                    note: note.trim(),
+                    createdBy: currentUser?.username || 'unknown'
+                });
+            }
             
             setShowAddModal(false);
+            setEditingShiftId(null);
             setStaffName('');
             setSelectedStaffId('');
             setWage('');
             setNote('');
         } catch (error) {
-            console.error("Error adding shift:", error);
+            console.error("Error saving shift:", error);
             alert("บันทึกไม่สำเร็จ");
         }
     };
 
-    const handleTogglePayment = async (shift: Shift) => {
+    const handleTogglePayment = async (shift: Shift, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const newPaidStatus = !shift.paid;
-        const shiftDate = new Date(shift.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-        const confirmMsg = newPaidStatus 
-            ? `ยืนยันการเบิกเงินสำหรับ ${shift.staffName} ใช่หรือไม่?`
-            : `ยืนยันยกเลิกการเบิกเงินของ ${shift.staffName} วันที่ ${shiftDate} จำนวน ฿${shift.wage.toLocaleString()} ?`;
-            
-        if (window.confirm(confirmMsg)) {
-            await updateShift(shift.id, {
+        
+        try {
+            const docRef = doc(db, 'shifts', shift.id);
+            await updateDoc(docRef, {
                 paid: newPaidStatus,
-                paidAt: newPaidStatus ? new Date().toISOString() : undefined
+                paidAt: newPaidStatus ? new Date().toISOString() : deleteField(),
+                updatedAt: serverTimestamp()
             });
+        } catch (error) {
+            console.error("Error toggling payment:", error);
+            alert("ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
         }
     };
 
@@ -188,13 +213,13 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     };
 
     const handleDeleteWithdrawal = async (id: string) => {
-        if (window.confirm("ต้องการยกเลิกการเบิกเงินนี้ใช่หรือไม่?")) {
+        if (window.confirm('ต้องการยกเลิกประวัติการเบิกเงินนี้ใช่หรือไม่?')) {
             await deleteWithdrawal(id);
         }
     };
 
     const handleDeleteShift = async (id: string) => {
-        if (window.confirm("ต้องการลบตารางงานนี้ใช่หรือไม่?")) {
+        if (window.confirm('ต้องการลบตารางงานนี้ใช่หรือไม่?')) {
             await deleteShift(id);
         }
     };
@@ -287,7 +312,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     const currentBranchName = branches.find(b => b.id === selectedBranchId)?.name || 'สาขาทั่วไป';
 
     return (
-        <div className="space-y-6 animate-fade-in pb-20">
+        <div className="space-y-6 pb-20">
             {/* Header */}
             <div className="flex justify-between items-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
                 <div>
@@ -527,14 +552,16 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                             {/* Withdrawal Status */}
                                             {shift.paid ? (
                                                 <button 
-                                                    onClick={() => handleTogglePayment(shift)}
+                                                    type="button"
+                                                    onClick={(e) => handleTogglePayment(shift, e)}
                                                     className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20 transition-all text-xs font-bold"
                                                 >
                                                     <Banknote size={14} /> เบิกแล้ว {shift.paidAt && <span className="text-[10px] font-normal opacity-60">({new Date(shift.paidAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })})</span>}
                                                 </button>
                                             ) : (
                                                 <button 
-                                                    onClick={() => handleTogglePayment(shift)}
+                                                    type="button"
+                                                    onClick={(e) => handleTogglePayment(shift, e)}
                                                     className={`flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 transition-all text-xs font-bold ${shift.status !== 'PRESENT' ? 'opacity-30 pointer-events-none' : ''}`}
                                                 >
                                                     <Banknote size={14} /> ยังไม่เบิก
@@ -638,6 +665,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                             <h3 className="font-bold text-white text-sm">สรุปตารางงานทั้งหมด ({shifts.length})</h3>
                             <button
+                                type="button"
                                 onClick={() => setShowAddModal(true)}
                                 className="bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors"
                             >
@@ -661,7 +689,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             <tbody className="divide-y divide-zinc-800">
                                 {shifts.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center text-zinc-600 italic">
+                                        <td colSpan={8} className="px-4 py-8 text-center text-zinc-600 italic">
                                             ไม่พบข้อมูลตารางงาน
                                         </td>
                                     </tr>
@@ -678,12 +706,16 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                 </td>
                                                 <td className="px-4 py-3 font-medium text-white">{shift.staffName}</td>
                                                 <td className="px-4 py-3">
+                                                    <span className="text-zinc-500 text-[10px] bg-zinc-800/50 px-1.5 py-0.5 rounded italic">{shift.role}</span>
+                                                </td>
+                                                <td className="px-4 py-3">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold ${shift.status === 'PRESENT' ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                         {shift.status === 'PRESENT' ? '฿' + shift.wage.toLocaleString() : '-'}
                                                     </span>
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <button 
+                                                        type="button"
                                                         onClick={() => handleToggleStatus(shift)}
                                                         className={`px-2 py-0.5 rounded text-[10px] border transition-colors
                                                             ${shift.status === 'PRESENT' ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' : 'border-rose-500/30 text-rose-400 bg-rose-500/5'}
@@ -695,23 +727,40 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     {shift.status === 'PRESENT' ? (
                                                         <button 
-                                                            onClick={() => handleTogglePayment(shift)}
-                                                            className={`group flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all border
+                                                            type="button"
+                                                            onClick={(e) => handleTogglePayment(shift, e)}
+                                                            className={`group flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded transition-all border justify-center min-w-[85px]
                                                                 ${shift.paid 
                                                                     ? 'text-emerald-400 bg-emerald-500/5 border-emerald-500/20 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20' 
                                                                     : 'text-zinc-500 bg-zinc-800/50 border-zinc-700/50 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20'}`}
                                                         >
                                                             <Banknote size={12} />
-                                                            <span className={shift.paid ? "group-hover:hidden" : ""}>
-                                                                {shift.paid ? 'เบิกแล้ว' : 'ยังไม่เบิก'}
+                                                            <span>
+                                                                {shift.paid ? 'เบิกแล้ว (คลิกเพื่อยกเลิก)' : 'ยังไม่เบิก'}
                                                             </span>
-                                                            {shift.paid && <span className="hidden group-hover:inline">ยกเลิกเบิก</span>}
                                                         </button>
                                                     ) : '-'}
                                                 </td>
                                                 <td className="px-4 py-3 text-right">
                                                     <div className="flex justify-end gap-1">
                                                         <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setEditingShiftId(shift.id);
+                                                                setSelectedStaffId(staffList.find(s => s.name === shift.staffName)?.id || 'new');
+                                                                setStaffName(shift.staffName);
+                                                                setWage(shift.wage.toString());
+                                                                setRole(shift.role);
+                                                                setShiftTime(shift.shiftTime);
+                                                                setNote(shift.note || '');
+                                                                setShowAddModal(true);
+                                                            }}
+                                                            className="p-1.5 text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
                                                             onClick={() => handleDeleteShift(shift.id)}
                                                             className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                                                         >
@@ -732,11 +781,11 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
 
             {/* Add Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden animate-slide-up">
+                <div className="fixed inset-0 bg-black/80 z-[50] flex items-center justify-center p-4">
+                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden">
                         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-                            <h3 className="font-bold text-white">ลงเวลาเพิ่ม</h3>
-                            <button onClick={() => setShowAddModal(false)} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+                            <h3 className="font-bold text-white">{editingShiftId ? 'แก้ไขตารางงาน' : 'ลงเวลาเพิ่ม'}</h3>
+                            <button onClick={() => { setShowAddModal(false); setEditingShiftId(null); }} className="text-zinc-400 hover:text-white"><X size={20} /></button>
                         </div>
                         <div className="p-4 space-y-4">
                             <div>
@@ -833,6 +882,28 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                 />
                             </div>
                             
+                            {editingShiftId && (
+                                <div className="pt-2 border-t border-zinc-800 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            const shift = shifts.find(s => s.id === editingShiftId);
+                                            if (shift) {
+                                                // Keep Edit Modal Open to prevent jumpiness
+                                                handleTogglePayment(shift, e);
+                                            }
+                                        }}
+                                        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all border
+                                            ${shifts.find(s => s.id === editingShiftId)?.paid 
+                                                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
+                                                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'}`}
+                                    >
+                                        <Banknote size={18} />
+                                        {shifts.find(s => s.id === editingShiftId)?.paid ? 'ยกเลิกสถานะเบิกเงิน' : 'บันทึกเป็น "เบิกแล้ว"'}
+                                    </button>
+                                </div>
+                            )}
+                            
                             <button
                                 onClick={handleAddShift}
                                 className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-violet-900/40 active:scale-95"
@@ -845,8 +916,8 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
             )}
             {/* Withdraw Modal */}
             {showWithdrawModal.show && showWithdrawModal.staff && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden animate-slide-up">
+                <div className="fixed inset-0 bg-black/80 z-[55] flex items-center justify-center p-4">
+                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden">
                         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                             <h3 className="font-bold text-white flex items-center gap-2"><Banknote size={18} className="text-emerald-400" /> เบิกเงิน: {showWithdrawModal.staff.name}</h3>
                             <button onClick={() => setShowWithdrawModal({show: false})} className="text-zinc-400 hover:text-white"><X size={20} /></button>
@@ -887,8 +958,8 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
 
             {/* History Modal */}
             {showHistoryModal.show && showHistoryModal.staff && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden animate-slide-up h-[500px] flex flex-col">
+                <div className="fixed inset-0 bg-black/80 z-[55] flex items-center justify-center p-4">
+                    <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden h-[500px] flex flex-col">
                         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
                             <h3 className="font-bold text-white flex items-center gap-2"><History size={18} className="text-violet-400" /> ประวัติการเบิก: {showHistoryModal.staff.name}</h3>
                             <button onClick={() => setShowHistoryModal({show: false})} className="text-zinc-400 hover:text-white"><X size={20} /></button>

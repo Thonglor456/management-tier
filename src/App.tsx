@@ -30,6 +30,8 @@ import {
   getCategories,
   saveCategories
 } from './services/dataService';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { db } from './firebase';
 import { LoginScreen } from './components/LoginScreen';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
@@ -400,6 +402,7 @@ export default function TierCoffeeApp() {
       branchId: data.branchId || selectedBranchId,
       date: data.date,
       type: formType,
+      name: data.name || '',
       amount: parseFloat(data.amount),
       category: data.category,
       paymentMethod: data.paymentMethod,
@@ -437,6 +440,50 @@ export default function TierCoffeeApp() {
     if (window.confirm('ยืนยันการลบรายการนี้?')) {
       await deleteTransactionReal(id);
       handleCloseForm();
+    }
+  };
+
+  // --- Batch Import from Google Sheets ---
+  const handleBatchImport = async (
+    newTransactions: Omit<Transaction, 'id'>[],
+    datesToOverwrite: string[]
+  ) => {
+    // 1. Fetch transactions for this branch to avoid composite index requirements
+    const q = query(
+      collection(db, 'transactions'),
+      where('branchId', '==', selectedBranchId)
+    );
+    const snap = await getDocs(q);
+    
+    // 2. Delete existing transactions for overwrite dates (filter in memory)
+    const overwriteSet = new Set(datesToOverwrite);
+    for (const d of snap.docs) {
+      const txnData = d.data();
+      if (overwriteSet.has(txnData.date)) {
+        await deleteDoc(doc(db, 'transactions', d.id));
+      }
+    }
+
+    // 3. Add all new transactions
+    for (const t of newTransactions) {
+      await addTransaction(t as any);
+    }
+  };
+
+  const handleBulkCleanup = async (year: number) => {
+    // 1. Fetch transactions for this branch
+    const q = query(
+      collection(db, 'transactions'),
+      where('branchId', '==', selectedBranchId)
+    );
+    const snap = await getDocs(q);
+    
+    // 2. Filter by year in memory and delete
+    for (const d of snap.docs) {
+      const date = d.data().date;
+      if (date && date.startsWith(`${year}-`)) {
+        await deleteDoc(doc(db, 'transactions', d.id));
+      }
     }
   };
 
@@ -527,6 +574,9 @@ export default function TierCoffeeApp() {
             formatDateThai={formatDateThai}
             onEdit={handleEdit}
             onDelete={deleteTransaction}
+            allTransactions={transactions}
+            onImportTransactions={handleBatchImport}
+            onBulkCleanup={handleBulkCleanup}
           />
         )}
 
@@ -627,7 +677,8 @@ export default function TierCoffeeApp() {
             category: editingTransaction.category,
             paymentMethod: editingTransaction.paymentMethod,
             toAccount: editingTransaction.toAccount || 'bank',
-            note: editingTransaction.note,
+            name: editingTransaction.name || '',
+            note: editingTransaction.note || '',
             branchId: editingTransaction.branchId // Pass existing branchId for editing
           } : undefined}
           onClose={handleCloseForm}

@@ -58,6 +58,7 @@ export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
                 branchId: selectedBranchId,
                 date: new Date().toISOString().split('T')[0],
                 type: 'ADJUSTMENT',
+                name: `ยกยอด/ตั้งต้น (${accountName})`,
                 amount: diff,
                 category: 'Set Balance (ยกยอด)',
                 paymentMethod: selectedAccount,

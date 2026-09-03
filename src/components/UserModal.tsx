@@ -77,7 +77,7 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-amber-500 outline-none transition-all"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-violet-500 outline-none transition-all"
                             placeholder="ชื่อพนักงาน"
                             required
                         />
@@ -96,7 +96,7 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
                             <button
                                 type="button"
                                 onClick={() => setRole('ADMIN')}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${role === 'ADMIN' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'text-slate-400 hover:text-white'}`}
+                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${role === 'ADMIN' ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/20' : 'text-slate-400 hover:text-white'}`}
                             >
                                 ผู้ดูแล (Admin)
                             </button>
@@ -108,7 +108,7 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
                         <select
                             value={branchId}
                             onChange={(e) => setBranchId(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-amber-500 outline-none transition-all appearance-none"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-violet-500 outline-none transition-all appearance-none"
                         >
                             <option value="">ไม่ระบุ (หรือ HQ)</option>
                             {branches.filter(b => b.id !== 'HQ').map(b => (
@@ -121,7 +121,7 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
                     <button
                         type="submit"
                         disabled={isSaving}
-                        className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-amber-900/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSaving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                     </button>

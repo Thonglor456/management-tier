@@ -575,7 +575,7 @@ export default function TierCoffeeApp() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="animate-pulse text-amber-400">
+        <div className="animate-pulse text-violet-400">
           Loading Application...
           {/* Show extra hint after timeout */}
           { /* The timeout effect will clear authLoading after 5s, but if it remains we can show a note */ }
@@ -718,7 +718,7 @@ export default function TierCoffeeApp() {
             )}
             <button 
               onClick={(e) => { e.stopPropagation(); setShowFabMenu(!showFabMenu); }}
-              className={`p-5 rounded-full shadow-[0_0_50px_rgba(124,58,237,0.6)] transition-all duration-300 border border-white/10 ${showFabMenu ? 'bg-zinc-800 text-zinc-400 rotate-45' : 'bg-amber-600 text-white hover:bg-amber-500 hover:scale-110 active:scale-90'}`}
+              className={`p-5 rounded-full shadow-[0_0_50px_rgba(124,58,237,0.6)] transition-all duration-300 border border-white/10 ${showFabMenu ? 'bg-zinc-800 text-zinc-400 rotate-45' : 'bg-violet-600 text-white hover:bg-violet-500 hover:scale-110 active:scale-90'}`}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <Plus size={32} />

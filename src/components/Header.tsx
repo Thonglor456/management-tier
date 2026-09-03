@@ -58,12 +58,12 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
                     <div className="flex items-center gap-3">
-                        <div className="bg-gradient-to-br from-amber-600 to-indigo-600 p-2 rounded-xl border border-amber-500/20 shadow-lg shadow-amber-900/20">
+                        <div className="bg-gradient-to-br from-violet-600 to-indigo-600 p-2 rounded-xl border border-violet-500/20 shadow-lg shadow-violet-900/20">
                             <Coffee size={20} className="text-white" />
                         </div>
                         <div>
                             <h1 className="text-lg font-bold tracking-tight text-white leading-none">Tier Coffee</h1>
-                            <span className="text-[10px] text-amber-400 font-medium uppercase tracking-widest">Enterprise</span>
+                            <span className="text-[10px] text-violet-400 font-medium uppercase tracking-widest">Enterprise</span>
                         </div>
                     </div>
 
@@ -72,10 +72,10 @@ export const Header: React.FC<HeaderProps> = ({
                             <button
                                 onClick={() => setShowBranchDropdown(!showBranchDropdown)}
                                 className={`flex items-center gap-2 bg-zinc-900/50 border rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ${
-                                    showBranchDropdown ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-800 hover:border-zinc-700'
+                                    showBranchDropdown ? 'border-violet-500 ring-2 ring-violet-500/20' : 'border-zinc-800 hover:border-zinc-700'
                                 }`}
                             >
-                                <Store size={14} className="text-amber-400" />
+                                <Store size={14} className="text-violet-400" />
                                 <span>{currentBranchName}</span>
                                 <ChevronDown size={14} className={`text-zinc-500 transition-transform duration-300 ${showBranchDropdown ? 'rotate-180' : ''}`} />
                             </button>
@@ -95,16 +95,16 @@ export const Header: React.FC<HeaderProps> = ({
                                                 }}
                                                 className={`w-full text-left px-3 py-3 rounded-xl transition-all flex items-center justify-between group ${
                                                     selectedBranchId === b.id 
-                                                    ? 'bg-amber-600/10 text-amber-400 font-bold' 
+                                                    ? 'bg-violet-600/10 text-violet-400 font-bold' 
                                                     : 'hover:bg-zinc-800/80 text-zinc-300 hover:text-white'
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-2 h-2 rounded-full ${selectedBranchId === b.id ? 'bg-amber-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]' : 'bg-zinc-700'}`}></div>
+                                                    <div className={`w-2 h-2 rounded-full ${selectedBranchId === b.id ? 'bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.5)]' : 'bg-zinc-700'}`}></div>
                                                     <span className="text-sm">{b.name}</span>
                                                 </div>
                                                 {selectedBranchId === b.id && (
-                                                    <Check size={16} className="text-amber-400 animate-in zoom-in-50 duration-300" />
+                                                    <Check size={16} className="text-violet-400 animate-in zoom-in-50 duration-300" />
                                                 )}
                                             </button>
                                         ))}
@@ -134,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({
                                     <>
                                         <button
                                             onClick={onEditBranch}
-                                            className="p-2 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-500 hover:text-amber-400 rounded-lg transition-colors border border-zinc-800/50"
+                                            className="p-2 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-500 hover:text-violet-400 rounded-lg transition-colors border border-zinc-800/50"
                                             title="แก้ไขชื่อสาขา"
                                         >
                                             <Edit2 size={14} />
@@ -165,7 +165,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }}
                         title="จัดการผู้ใช้งาน (Admin Only)"
                     >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${currentUser.role === 'ADMIN' ? 'bg-amber-600 border-amber-500 text-white group-hover:scale-110' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all ${currentUser.role === 'ADMIN' ? 'bg-violet-600 border-violet-500 text-white group-hover:scale-110' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}>
                             <span className="text-xs font-bold">{currentUser.name.charAt(0)}</span>
                         </div>
                         <div className="hidden sm:block text-right">

@@ -156,9 +156,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div>
                     <div className="flex items-center gap-2">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <TrendingUp className="text-amber-400" /> {startDate === endDate ? 'ภาพรวมรายวัน' : 'ภาพรวมตามช่วงเวลา'}
+                            <TrendingUp className="text-violet-400" /> {startDate === endDate ? 'ภาพรวมรายวัน' : 'ภาพรวมตามช่วงเวลา'}
                         </h2>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${selectedBranchId === 'HQ' ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${selectedBranchId === 'HQ' ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-violet-500/10 border-violet-500/30 text-violet-400'}`}>
                             {currentBranch?.name || 'ทุกสาขา'}
                         </span>
                     </div>
@@ -250,7 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div className="flex items-center gap-4">
                         <h3 className="text-lg font-bold text-d-200 flex items-center gap-2">
-                            <Calendar size={20} className="text-amber-400" /> แนวโน้มการเงิน
+                            <Calendar size={20} className="text-violet-400" /> แนวโน้มการเงิน
                         </h3>
                         <div className="px-3 py-1.5 bg-white/5 border border-white/10 backdrop-blur-md rounded-xl text-sm font-semibold whitespace-nowrap shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                             <span className="text-zinc-400 mr-2">Net Profit:</span>
@@ -262,7 +262,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex bg-black p-1 rounded-lg border border-zinc-800">
                         {['7d', '1m', '3m'].map((view) => (
                             <button key={view} onClick={() => setChartView(view as any)}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartView === view ? 'bg-amber-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartView === view ? 'bg-violet-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>
                                 {view === '7d' ? '7 วัน' : view === '1m' ? '1 เดือน' : '3 เดือน'}
                             </button>
                         ))}
@@ -315,7 +315,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             <Brush
                                 dataKey="name"
                                 height={30}
-                                stroke="#f59e0b"
+                                stroke="#8b5cf6"
                                 fill="#18181b"
                                 tickFormatter={() => ''}
                                 startIndex={brushState.startIndex}
@@ -425,16 +425,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     const liveDifference = isEditing ? (parseFloat(actualBalanceInput) || 0) - calculatedBalance : null;
 
                     return (
-                        <Card key={acc.id} className={`p-5 transition-all overflow-hidden relative group ${isEditing ? 'ring-2 ring-amber-500 shadow-2xl' : 'hover:border-zinc-700 shadow-lg'}`}>
+                        <Card key={acc.id} className={`p-5 transition-all overflow-hidden relative group ${isEditing ? 'ring-2 ring-violet-500 shadow-2xl' : 'hover:border-zinc-700 shadow-lg'}`}>
                             {/* Abstract glow effect */}
-                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-600/5 rounded-full blur-2xl group-hover:bg-amber-600/10 transition-colors pointer-events-none" />
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-violet-600/5 rounded-full blur-2xl group-hover:bg-violet-600/10 transition-colors pointer-events-none" />
 
 
 
                             {isEditing ? (
                                 <div className="space-y-4 relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-amber-600 text-white rounded-2xl shadow-lg border border-amber-500">{acc.icon}</div>
+                                        <div className="p-2.5 bg-violet-600 text-white rounded-2xl shadow-lg border border-violet-500">{acc.icon}</div>
                                         <span className="font-bold text-lg text-white">แก้ไขยอด {acc.name}</span>
                                     </div>
                                     <div className="space-y-3">
@@ -452,13 +452,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">เงินที่มีอยู่จริง (ACTUAL)</label>
+                                            <label className="text-[10px] font-bold text-violet-400 uppercase tracking-widest block">เงินที่มีอยู่จริง (ACTUAL)</label>
                                             <div className="space-y-2">
                                                 <input
                                                     type="number"
                                                     value={actualBalanceInput}
                                                     onChange={(e) => setActualBalanceInput(e.target.value)}
-                                                    className="w-full bg-zinc-950/50 border border-amber-500/30 rounded-xl px-4 py-3 text-white text-xl font-black outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-zinc-800"
+                                                    className="w-full bg-zinc-950/50 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all placeholder:text-zinc-800"
                                                     placeholder="0.00"
                                                     autoFocus
                                                 />
@@ -477,7 +477,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             ) : canCompare ? (
                                 <div className="space-y-4 relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-zinc-800 text-amber-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
+                                        <div className="p-2.5 bg-zinc-800 text-violet-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
                                         <span className="font-bold text-sm text-zinc-400 uppercase tracking-wider">{acc.name}</span>
                                     </div>
 
@@ -514,7 +514,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             ) : (
                                 <div className="flex flex-col gap-3 relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2.5 bg-zinc-800 text-amber-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
+                                        <div className="p-2.5 bg-zinc-800 text-violet-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
                                         <span className="font-bold text-sm text-zinc-400 uppercase tracking-wider">{acc.name}</span>
                                     </div>
                                     <div>
@@ -535,7 +535,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                             e.stopPropagation();
                                             handleEditBalance(acc.id, actualBalance);
                                         }}
-                                        className="p-3 bg-amber-600 text-white rounded-xl shadow-lg border border-amber-500 hover:bg-amber-500 hover:scale-110 active:scale-95 transition-all"
+                                        className="p-3 bg-violet-600 text-white rounded-xl shadow-lg border border-violet-500 hover:bg-violet-500 hover:scale-110 active:scale-95 transition-all"
                                         aria-label="แก้ไขยอด"
                                     >
                                         <Edit3 size={18} />
@@ -550,11 +550,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* Recent Transactions Section */}
             <Card className="p-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    <Calendar size={20} className="text-amber-400" /> รายการล่าสุด (Recent Transactions)
+                    <Calendar size={20} className="text-violet-400" /> รายการล่าสุด (Recent Transactions)
                 </h3>
                 <div className="space-y-3">
                     {dailyTransactions.slice(0, 5).map(t => (
-                        <div key={t.id} className="flex justify-between items-center bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 hover:border-amber-500/30 transition-colors">
+                        <div key={t.id} className="flex justify-between items-center bg-zinc-900/50 p-3 rounded-xl border border-zinc-800 hover:border-violet-500/30 transition-colors">
                              <div className="flex items-center gap-3">
                                  <div className={`p-2 rounded-xl transition-colors ${t.type === 'INCOME' ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'}`}>
                                     {t.type === 'INCOME' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}

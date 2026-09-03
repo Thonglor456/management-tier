@@ -7,7 +7,7 @@ import React from 'react';
 
 export const INITIAL_BRANCHES: Branch[] = [
     { id: 'HQ', name: 'ทุกสาขา (All Branches)', color: 'bg-slate-700' }, // Virtual ID for Admin
-    { id: 'B01', name: 'สาขา สยามสแควร์', color: 'bg-amber-600' },
+    { id: 'B01', name: 'สาขา สยามสแควร์', color: 'bg-violet-600' },
     { id: 'B02', name: 'สาขา อารีย์', color: 'bg-indigo-600' },
     { id: 'B03', name: 'สาขา ทองหล่อ', color: 'bg-emerald-600' },
 ];

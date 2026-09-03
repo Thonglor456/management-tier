@@ -83,7 +83,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-800 overflow-hidden animate-fade-in">
-                <div className="bg-amber-600 p-4 flex justify-between items-center text-white shadow-lg shadow-amber-900/20">
+                <div className="bg-violet-600 p-4 flex justify-between items-center text-white shadow-lg shadow-violet-900/20">
                     <h3 className="text-lg font-bold flex items-center gap-2">
                         <UserPlus size={20} />
                         เพิ่มพนักงานใหม่
@@ -106,7 +106,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
-                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600"
+                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-slate-600"
                                 placeholder="เช่น somchai (ไม่ต้องพิมพ์ @tiercoffee.com)"
                                 disabled={isLoading}
                             />
@@ -127,7 +127,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600"
+                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-slate-600"
                             placeholder="ชื่อที่จะแสดงในระบบ"
                             disabled={isLoading}
                         />
@@ -144,7 +144,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600"
+                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-slate-600"
                                 placeholder="••••••"
                                 disabled={isLoading}
                             />
@@ -158,7 +158,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600"
+                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all placeholder:text-slate-600"
                                 placeholder="••••••"
                                 disabled={isLoading}
                             />
@@ -186,7 +186,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                                 type="button"
                                 onClick={() => setRole('ADMIN')}
                                 className={`p-3 rounded-xl border text-sm font-medium transition-all ${role === 'ADMIN'
-                                    ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-900/20'
+                                    ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-900/20'
                                     : 'bg-slate-950 border-slate-800 text-slate-500 hover:bg-slate-900 hover:text-slate-300'
                                     }`}
                                 disabled={isLoading}
@@ -205,7 +205,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                             <select
                                 value={branchId}
                                 onChange={(e) => setBranchId(e.target.value)}
-                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all appearance-none cursor-pointer"
+                                className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all appearance-none cursor-pointer"
                                 disabled={isLoading}
                             >
                                 <option value="">ไม่ระบุ (หรือเข้าดูได้ทุกสาขา สำหรับ HQ/Admin)</option>
@@ -230,7 +230,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-900/20 transition-all flex items-center justify-center gap-2 transform active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
+                        className={`w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-violet-900/20 transition-all flex items-center justify-center gap-2 transform active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
                     >
                         <UserPlus size={18} />
                         {isLoading ? 'กำลังสร้าง...' : 'สร้างบัญชีผู้ใช้ใหม่'}

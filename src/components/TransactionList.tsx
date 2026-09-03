@@ -168,10 +168,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     return (
         <div className="space-y-6 animate-fade-in">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-zinc-200">ประวัติรายการ {selectedBranchId !== 'HQ' && <span className="text-amber-400 text-sm font-normal">({currentBranchName})</span>}</h3>
+                <h3 className="text-lg font-bold text-zinc-200">ประวัติรายการ {selectedBranchId !== 'HQ' && <span className="text-violet-400 text-sm font-normal">({currentBranchName})</span>}</h3>
                 <div className="flex gap-2 relative">
                     {onImportTransactions && (
-                        <button onClick={() => setShowImportModal(true)} className="text-amber-400 flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full hover:bg-zinc-800 transition-colors">
+                        <button onClick={() => setShowImportModal(true)} className="text-violet-400 flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full hover:bg-zinc-800 transition-colors">
                             <Upload size={14} /> 📥 นำเข้า Sheet
                         </button>
                     )}
@@ -179,7 +179,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         <Download size={14} /> Export CSV
                     </button>
                     {/* Filter Mode - Type */}
-                    <button onClick={() => setShowFilterMenu(!showFilterMenu)} className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${filterType !== 'ALL' ? 'text-amber-400 border-amber-500/50' : 'text-zinc-400'}`}>
+                    <button onClick={() => setShowFilterMenu(!showFilterMenu)} className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${filterType !== 'ALL' ? 'text-violet-400 border-violet-500/50' : 'text-zinc-400'}`}>
                         <Filter size={14} />
                         {filterType === 'ALL' ? 'ตัวกรอง' :
                             filterType === 'INCOME' ? 'รายรับ' :
@@ -194,7 +194,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <div className="relative">
                         <button
                             onClick={() => setShowDateMenu(!showDateMenu)}
-                            className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${startDateFilter || endDateFilter ? 'text-amber-400 border-amber-500/50' : 'text-zinc-400'}`}
+                            className={`flex items-center gap-1 text-sm bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full transition-colors ${startDateFilter || endDateFilter ? 'text-violet-400 border-violet-500/50' : 'text-zinc-400'}`}
                         >
                             <Calendar size={14} />
                             {!startDateFilter && !endDateFilter ? 'ปฏิทิน' :
@@ -219,7 +219,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                 type="date"
                                                 value={startDateFilter}
                                                 onChange={(e) => setStartDateFilter(e.target.value)}
-                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-amber-500"
+                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500"
                                             />
                                         </div>
                                         <div className="flex flex-col gap-1">
@@ -228,7 +228,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                 type="date"
                                                 value={endDateFilter}
                                                 onChange={(e) => setEndDateFilter(e.target.value)}
-                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-amber-500"
+                                                className="bg-black border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:ring-1 focus:ring-violet-500"
                                             />
                                         </div>
                                     </div>
@@ -244,7 +244,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => setShowDateMenu(false)}
-                                            className="flex-1 text-xs py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold"
+                                            className="flex-1 text-xs py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-bold"
                                         >
                                             ตกลง
                                         </button>
@@ -257,7 +257,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     {/* Filter Type Menu */}
                     {showFilterMenu && (
                         <div className="absolute top-full right-0 mt-2 w-40 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-20 animate-fade-in">
-                            <button onClick={() => { setFilterType('ALL'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'ALL' ? 'text-amber-400 bg-amber-500/10' : 'text-zinc-300'}`}>ทั้งหมด</button>
+                            <button onClick={() => { setFilterType('ALL'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'ALL' ? 'text-violet-400 bg-violet-500/10' : 'text-zinc-300'}`}>ทั้งหมด</button>
                             <button onClick={() => { setFilterType('INCOME'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'INCOME' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-300'}`}>รายรับ</button>
                             <button onClick={() => { setFilterType('EXPENSE'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'EXPENSE' ? 'text-rose-400 bg-rose-500/10' : 'text-zinc-300'}`}>รายจ่าย</button>
                             <button onClick={() => { setFilterType('EXPENSE_CASH'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'EXPENSE_CASH' ? 'text-rose-400 bg-rose-500/10' : 'text-zinc-300'}`}>รายจ่าย - เงินสด</button>
@@ -275,7 +275,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <List size={48} className="mx-auto mb-2 opacity-20" />
                     <p>{startDateFilter || endDateFilter || filterType !== 'ALL' ? 'ไม่พบรายการที่ตรงตามเงื่อนไข' : 'ไม่พบรายการในสาขานี้'}</p>
                     {(startDateFilter || endDateFilter || filterType !== 'ALL') && (
-                        <button onClick={() => { clearDateFilter(); setFilterType('ALL'); }} className="mt-4 text-amber-400 text-sm hover:underline">ล้างการเลือกทั้งหมด</button>
+                        <button onClick={() => { clearDateFilter(); setFilterType('ALL'); }} className="mt-4 text-violet-400 text-sm hover:underline">ล้างการเลือกทั้งหมด</button>
                     )}
                 </div>
             ) : (
@@ -327,7 +327,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                     {t.name || t.category}
                                                 </div>
                                                 <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-2 mt-1">
-                                                    {selectedBranchId === 'HQ' && <span className="text-amber-300 bg-amber-900/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
+                                                    {selectedBranchId === 'HQ' && <span className="text-violet-300 bg-violet-900/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-violet-500/20">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
                                                     
                                                     {/* 1. Payment Method / Channel */}
                                                     <span className="flex items-center gap-1 bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
@@ -368,7 +368,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                             <div className="flex gap-1">
                                                 {canEdit(t) && (
                                                     <>
-                                                        <button onClick={() => onEdit(t)} className="text-zinc-600 hover:text-amber-400 p-1"><Edit2 size={14} /></button>
+                                                        <button onClick={() => onEdit(t)} className="text-zinc-600 hover:text-violet-400 p-1"><Edit2 size={14} /></button>
                                                         <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="text-zinc-600 hover:text-rose-400 p-1"><Trash2 size={14} /></button>
                                                     </>
                                                 )}

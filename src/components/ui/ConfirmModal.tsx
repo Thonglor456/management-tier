@@ -27,14 +27,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
     const colors = {
         danger: 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-900/20',
-        warning: 'bg-yellow-500 text-white hover:bg-yellow-600 shadow-yellow-900/20',
-        info: 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-900/20'
+        warning: 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-900/20',
+        info: 'bg-violet-600 text-white hover:bg-violet-700 shadow-violet-900/20'
     };
 
     const icons = {
         danger: <div className="p-3 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20"><AlertTriangle size={24} /></div>,
-        warning: <div className="p-3 bg-yellow-500/10 text-yellow-400 rounded-2xl border border-yellow-500/20"><AlertTriangle size={24} /></div>,
-        info: <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20"><AlertTriangle size={24} /></div>
+        warning: <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20"><AlertTriangle size={24} /></div>,
+        info: <div className="p-3 bg-violet-500/10 text-violet-400 rounded-2xl border border-violet-500/20"><AlertTriangle size={24} /></div>
     };
 
     return (

@@ -59,7 +59,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser: _cu
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                        <span className="bg-amber-500/20 p-2 rounded-lg text-amber-400"><Shield size={24} /></span>
+                        <span className="bg-violet-500/20 p-2 rounded-lg text-violet-400"><Shield size={24} /></span>
                         จัดการพนักงาน
                     </h2>
                     <p className="text-slate-400 mt-1">จัดการผู้ใช้งาน กำหนดสิทธิ์ และสาขา</p>
@@ -100,7 +100,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser: _cu
                                     </td>
                                     <td className="p-4">
                                         {user.role === 'ADMIN' ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">
                                                 <Shield size={12} /> Admin
                                             </span>
                                         ) : (
@@ -118,7 +118,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ currentUser: _cu
                                     <td className="p-4 text-right pr-6">
                                         <button
                                             onClick={() => handleEdit(user)}
-                                            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-amber-600 transition-all shadow-sm"
+                                            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-violet-600 transition-all shadow-sm"
                                             title="แก้ไขข้อมูล"
                                         >
                                             <Edit2 size={16} />

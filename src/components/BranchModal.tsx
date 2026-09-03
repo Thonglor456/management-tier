@@ -54,7 +54,7 @@ export const BranchModal: React.FC<BranchModalProps> = ({
             <div className="bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-800 animate-zoom-in my-8">
                 <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                     <h3 className="text-white font-bold flex items-center gap-2">
-                        <Store size={18} className="text-amber-400" />
+                        <Store size={18} className="text-violet-400" />
                         {isEditing ? 'แก้ไขข้อมูลสาขา' : 'เพิ่มสาขาใหม่'}
                     </h3>
                     <button type="button" onClick={onClose} className="text-slate-500 hover:text-white"><X size={20} /></button>
@@ -68,7 +68,7 @@ export const BranchModal: React.FC<BranchModalProps> = ({
                             required
                             value={branchNameInput}
                             onChange={(e) => setBranchNameInput(e.target.value)}
-                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 transition-all"
+                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 transition-all"
                             placeholder="เช่น สาขา ลาดพร้าว"
                         />
                     </div>
@@ -77,7 +77,7 @@ export const BranchModal: React.FC<BranchModalProps> = ({
                         <label className="block text-sm font-medium text-slate-400 mb-2 flex justify-between">
                             <span>Google Sheets URL (สำหรับนำเข้า)</span>
                             {urlInput && (
-                                <button type="button" onClick={handleTestLink} className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                                <button type="button" onClick={handleTestLink} className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1">
                                     <Link size={12} /> ทดสอบลิงก์
                                 </button>
                             )}
@@ -86,7 +86,7 @@ export const BranchModal: React.FC<BranchModalProps> = ({
                             type="url"
                             value={urlInput}
                             onChange={(e) => setUrlInput(e.target.value)}
-                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 transition-all text-sm"
+                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 transition-all text-sm"
                             placeholder="https://docs.google.com/spreadsheets/d/.../edit"
                         />
                         <p className="text-xs text-slate-500 mt-1">ต้องแชร์ชีทเป็น "Anyone with the link can view"</p>
@@ -98,13 +98,13 @@ export const BranchModal: React.FC<BranchModalProps> = ({
                             type="text"
                             value={tabsInput}
                             onChange={(e) => setTabsInput(e.target.value)}
-                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-amber-500 transition-all text-sm"
+                            className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-white outline-none focus:border-violet-500 transition-all text-sm"
                             placeholder="เช่น ขอนแก่น หน้าบ้าน, ขอนแก่น โอน (คั่นด้วยลูกน้ำ)"
                         />
                         <p className="text-xs text-slate-500 mt-1">เว้นว่างไว้หากต้องการดึงจาก Tab แรกสุดของไฟล์เท่านั้น</p>
                     </div>
 
-                    <button type="submit" className="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl transition-all">
+                    <button type="submit" className="w-full mt-6 bg-violet-600 hover:bg-violet-500 text-white font-bold py-3 rounded-xl transition-all">
                         บันทึก
                     </button>
                 </form>

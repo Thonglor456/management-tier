@@ -36,6 +36,8 @@ export const subscribeToStaff = (
         
         staff.sort((a, b) => a.name.localeCompare(b.name));
         callback(staff);
+    }, (error) => {
+        console.error("Error subscribing to staff:", error);
     });
 };
 

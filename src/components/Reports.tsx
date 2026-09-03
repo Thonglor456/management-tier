@@ -1,7 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PieChart from 'lucide-react/dist/esm/icons/pie-chart';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
 import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card } from './ui/Card';
+import { ACCOUNTS } from '../constants';
 import type { Transaction } from '../types';
 
 interface ReportsProps {
@@ -10,6 +14,9 @@ interface ReportsProps {
     currentBranchName: string;
     expenseCategories: string[];
     formatCurrency: (num: number) => string;
+    startDate: string;
+    endDate: string;
+    onRangeChange: (start: string, end: string) => void;
 }
 
 export const Reports: React.FC<ReportsProps> = ({
@@ -17,39 +24,62 @@ export const Reports: React.FC<ReportsProps> = ({
     selectedBranchId,
     currentBranchName,
     expenseCategories,
-    formatCurrency
+    formatCurrency,
+    startDate,
+    endDate,
+    onRangeChange
 }) => {
-    const [reportView, setReportView] = useState<'7d' | '1m' | '3m'>('1m');
-
     const filteredByDate = useMemo(() => {
-        const now = new Date();
-        let startDate = new Date();
+        return filteredTransactions.filter(t => t.date >= startDate && t.date <= endDate);
+    }, [filteredTransactions, startDate, endDate]);
 
-        if (reportView === '7d') {
-            startDate.setDate(now.getDate() - 7);
-        } else if (reportView === '1m') {
-            startDate.setDate(now.getDate() - 30);
-        } else {
-            startDate.setMonth(now.getMonth() - 3);
-        }
+    const changeMonth = (months: number) => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Move to start of month
+        start.setMonth(start.getMonth() + months);
+        start.setDate(1);
+        
+        // Move to end of that month
+        end.setMonth(start.getMonth() + 1);
+        end.setDate(0);
 
-        const startStr = startDate.toISOString().split('T')[0];
-        return filteredTransactions.filter(t => t.date >= startStr);
-    }, [filteredTransactions, reportView]);
+        onRangeChange(
+            start.toISOString().split('T')[0],
+            end.toISOString().split('T')[0]
+        );
+    };
 
     const expenseData = useMemo(() => {
-        return expenseCategories.map(cat => ({
+        // We consider both EXPENSE and DIVIDEND as "Expenses" for the report
+        const expenseTransactions = filteredByDate.filter(t => t.type === 'EXPENSE' || t.type === 'DIVIDEND');
+
+        // First get data for known categories
+        const categorized = expenseCategories.map(cat => ({
             name: cat,
-            value: filteredByDate.filter(t => t.type === 'EXPENSE' && t.category === cat).reduce((sum, t) => sum + t.amount, 0)
-        })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+            value: expenseTransactions.filter(t => t.category?.trim() === cat.trim()).reduce((sum, t) => sum + t.amount, 0)
+        })).filter(d => d.value > 0);
+
+        // Then catch any expenses that didn't match the categories (Uncategorized or Other)
+        const knownCatSet = new Set(expenseCategories.map(c => c.trim()));
+        const otherValue = expenseTransactions
+            .filter(t => !t.category || !knownCatSet.has(t.category.trim()))
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        if (otherValue > 0) {
+            categorized.push({ name: 'อื่นๆ (Other)', value: otherValue });
+        }
+
+        return categorized.sort((a, b) => b.value - a.value);
     }, [filteredByDate, expenseCategories]);
 
     const incomeData = useMemo(() => {
-        // Collect all unique income categories from data
-        const cats = Array.from(new Set(filteredByDate.filter(t => t.type === 'INCOME').map(t => t.category)));
-        return cats.map(cat => ({
-            name: cat,
-            value: filteredByDate.filter(t => t.type === 'INCOME' && t.category === cat).reduce((sum, t) => sum + t.amount, 0)
+        // Group income by payment method instead of category
+        return ACCOUNTS.map(acc => ({
+            id: acc.id,
+            name: acc.name,
+            value: filteredByDate.filter(t => t.type === 'INCOME' && t.paymentMethod === acc.id).reduce((sum, t) => sum + t.amount, 0)
         })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
     }, [filteredByDate]);
 
@@ -67,24 +97,76 @@ export const Reports: React.FC<ReportsProps> = ({
         '#a7f3d0', '#d1fae5', '#ecfdf5', '#064e3b', '#3b82f6', '#1d4ed8'
     ];
 
+    const ACCOUNT_COLORS: Record<string, string> = {
+        cash: '#10b981',           // Emerald
+        bank: '#a855f7',           // Purple
+        delivery: '#f97316',       // Orange
+        thaiChuaiThai: '#3b82f6'   // Blue
+    };
+
     return (
         <div className="space-y-6 animate-fade-in pb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
-                    <PieChart size={20} className="text-violet-400" />
-                    วิเคราะห์ผลกำไร
-                    {selectedBranchId !== 'HQ' && <span className="text-violet-400 text-sm font-normal">({currentBranchName})</span>}
-                </h3>
-                <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800">
-                    {['7d', '1m', '3m'].map((view) => (
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/50">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20 shadow-inner">
+                        <PieChart size={20} className="text-violet-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-200 leading-tight">
+                            วิเคราะห์ผลกำไร
+                        </h3>
+                        <p className="text-slate-500 text-xs">
+                            {selectedBranchId === 'HQ' ? 'ข้อมูลรวมทุกสาขา' : `สรุปผลสาขา: ${currentBranchName}`}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                    <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 shadow-inner">
                         <button
-                            key={view}
-                            onClick={() => setReportView(view as any)}
-                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${reportView === view ? 'bg-slate-800 text-violet-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                            onClick={() => changeMonth(-1)}
+                            className="p-2 hover:bg-slate-800 rounded-md text-slate-400 transition-colors"
+                            title="เดือนก่อนหน้า"
                         >
-                            {view === '7d' ? '7 วัน' : view === '1m' ? '1 เดือน' : '3 เดือน'}
+                            <ChevronLeft size={16} />
                         </button>
-                    ))}
+                        <button
+                            onClick={() => {
+                                const start = new Date();
+                                start.setDate(1);
+                                const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+                                onRangeChange(start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
+                            }}
+                            className="px-3 py-1 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors"
+                        >
+                            เดือนนี้
+                        </button>
+                        <button
+                            onClick={() => changeMonth(1)}
+                            className="p-2 hover:bg-slate-800 rounded-md text-slate-400 transition-colors"
+                            title="เดือนถัดไป"
+                        >
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-lg border border-slate-800 flex-1 md:flex-none">
+                        <Calendar size={14} className="text-slate-500" />
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => onRangeChange(e.target.value, endDate)}
+                            className="bg-transparent text-xs text-slate-200 outline-none w-28 cursor-pointer"
+                        />
+                        <span className="text-slate-600">-</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => onRangeChange(startDate, e.target.value)}
+                            className="bg-transparent text-xs text-slate-200 outline-none w-28 cursor-pointer"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -98,8 +180,11 @@ export const Reports: React.FC<ReportsProps> = ({
                     <h2 className={`text-4xl md:text-5xl font-bold tracking-tight mb-2 ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                         {netProfit > 0 ? '+' : ''}{formatCurrency(netProfit)}
                     </h2>
-                    <p className="text-slate-500 text-xs">
-                        {reportView === '7d' ? '7 วันย้อนหลัง' : reportView === '1m' ? '1 เดือนย้อนหลัง' : '3 เดือนย้อนหลัง'}
+                    <p className="text-slate-500 text-xs mt-1">
+                        {startDate === endDate 
+                            ? `ประจำวันที่ ${new Date(startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                            : `ตั้งแต่วันที่ ${new Date(startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} ถึง ${new Date(endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        }
                     </p>
                 </div>
 
@@ -142,7 +227,7 @@ export const Reports: React.FC<ReportsProps> = ({
                                             stroke="#0f172a"
                                             strokeWidth={2}
                                         >
-                                            {incomeData.map((_entry, index) => <Cell key={`cell-${index}`} fill={INCOME_COLORS[index % INCOME_COLORS.length]} />)}
+                                            {incomeData.map((entry, index) => <Cell key={`cell-${index}`} fill={ACCOUNT_COLORS[entry.id as keyof typeof ACCOUNT_COLORS] || INCOME_COLORS[index % INCOME_COLORS.length]} />)}
                                         </Pie>
                                         <Tooltip
                                             formatter={(value) => formatCurrency(value as number)}
@@ -163,7 +248,7 @@ export const Reports: React.FC<ReportsProps> = ({
                                         />
                                         <div className="relative flex justify-between items-center text-sm">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: INCOME_COLORS[index % INCOME_COLORS.length] }} />
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ACCOUNT_COLORS[item.id as keyof typeof ACCOUNT_COLORS] || INCOME_COLORS[index % INCOME_COLORS.length] }} />
                                                 <span className="text-slate-300 font-medium">{item.name}</span>
                                             </div>
                                             <div className="text-right">

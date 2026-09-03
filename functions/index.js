@@ -4,7 +4,7 @@
  */
 
 const { setGlobalOptions } = require("firebase-functions");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -84,5 +84,62 @@ exports.createUser = onCall(async (request) => {
         }
 
         throw new HttpsError("internal", `เกิดข้อผิดพลาด: ${error.message}`);
+    }
+});
+
+/**
+ * Server-side proxy for fetching public Google Sheets data.
+ *
+ * The frontend used to call free third-party CORS proxies (corsproxy.io,
+ * allorigins.win) to work around the browser CORS block when reading the
+ * Google Sheets "gviz" JSON endpoint directly. Those proxies are unreliable
+ * (rate-limited / require signup / go down) and their own error responses
+ * (e.g. a 401 from the proxy itself) were being misreported to users as
+ * "the Google Sheet isn't shared", which is misleading.
+ *
+ * This function fetches Google Sheets server-to-server (no CORS involved)
+ * so the frontend only ever gets a real status from Google.
+ */
+exports.fetchGoogleSheet = onRequest(async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+
+    if (req.method === "OPTIONS") {
+        res.set("Access-Control-Allow-Methods", "GET");
+        res.set("Access-Control-Allow-Headers", "Content-Type");
+        res.status(204).send("");
+        return;
+    }
+
+    const sheetId = req.query.sheetId;
+    const sheetName = req.query.sheetName;
+
+    if (!sheetId || typeof sheetId !== "string") {
+        res.status(400).json({ error: "Missing required query param: sheetId" });
+        return;
+    }
+
+    const sheetParam = sheetName ? `&sheet=${encodeURIComponent(String(sheetName))}` : "";
+    const targetUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:json${sheetParam}`;
+
+    try {
+        const response = await fetch(targetUrl);
+        const text = await response.text();
+
+        if (!response.ok) {
+            logger.warn(`Google Sheets fetch failed (${response.status}) for sheet ${sheetId}`);
+            const isAuthError = response.status === 401 || response.status === 403;
+            res.status(response.status).json({
+                error: isAuthError
+                    ? "Authentication required: Please share the Google Sheet as 'Anyone with the link can view'"
+                    : `Google Sheets returned ${response.status}`,
+            });
+            return;
+        }
+
+        res.set("Content-Type", "text/plain; charset=utf-8");
+        res.status(200).send(text);
+    } catch (error) {
+        logger.error("Error fetching Google Sheet:", error);
+        res.status(502).json({ error: `ไม่สามารถเชื่อมต่อ Google Sheets ได้: ${error.message}` });
     }
 });

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MOR CLINIC — จองคิวออนไลน์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0E1F4D;
+  --blue:#1A4DB3;
+  --blue-lt:#2563EB;
+  --cyan:#38B6E8;
+  --cyan-pale:#EAF6FD;
+  --blue-pale:#EEF3FF;
+  --blue-mid:#B3CCFF;
+  --slate:#4B5A78;
+  --muted:#8A96B0;
+  --line:#E4EAF5;
+  --surface:#F4F7FC;
+  --white:#FFFFFF;
+  --green:#0BB07B;
+  --green-pale:#E6FAF4;
+  --red:#E53E3E;
+  --red-pale:#FFF0F0;
+  --amber:#D97706;
+  --amber-pale:#FFFBEB;
+  --r:14px;--rs:10px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans Thai','Inter',sans-serif;background:var(--surface);color:var(--navy);-webkit-font-smoothing:antialiased}
+#app{height:100vh;display:flex;flex-direction:column;max-width:430px;margin:0 auto;background:var(--white);position:relative;overflow:hidden}
+
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--white);border-bottom:1px solid var(--line);flex-shrink:0;min-height:58px}
+.back-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back-btn svg{width:18px;height:18px;stroke:var(--navy);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.topbar-logo{display:flex;align-items:center;gap:10px;flex:1}
+.topbar-brand{font-size:15px;font-weight:700;color:var(--navy);letter-spacing:.8px;line-height:1}
+.topbar-brand2{font-size:10px;color:var(--muted);margin-top:2px}
+.topbar-center{flex:1;display:none}
+.topbar-title{font-size:15px;font-weight:700;color:var(--navy)}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+.progress-track{height:3px;background:var(--line);flex-shrink:0}
+.progress-fill{height:3px;background:linear-gradient(90deg,var(--navy) 0%,var(--cyan) 100%);transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+.page{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 20px 100px;display:none}
+.page.active{display:block}
+.step-label{font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.page-heading{font-size:22px;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:24px}
+
+.choice-grid{display:flex;flex-direction:column;gap:10px}
+.choice-card{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--white);border:1.5px solid var(--line);border-radius:var(--r);cursor:pointer;transition:border-color .15s,background .15s;user-select:none;position:relative}
+.choice-card.selected{border-color:var(--blue);background:var(--blue-pale)}
+.choice-card:active{transform:scale(.99)}
+.choice-icon{width:44px;height:44px;border-radius:11px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.choice-card.selected .choice-icon{background:rgba(26,77,179,.1)}
+.choice-icon svg{width:21px;height:21px;stroke:var(--slate);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .15s}
+.choice-card.selected .choice-icon svg{stroke:var(--blue)}
+.choice-text{flex:1;min-width:0}
+.choice-name{font-size:15px;font-weight:600;color:var(--navy)}
+.choice-desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.choice-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.choice-card.selected .choice-check{background:var(--blue);border-color:var(--blue)}
+.choice-check svg{width:12px;height:12px;stroke:white;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
+.choice-card.selected .choice-check svg{opacity:1}
+.badge-pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;flex-shrink:0}
+.badge-pop{background:var(--amber-pale);color:var(--amber)}
+.badge-call{background:var(--red-pale);color:var(--red)}
+
+.field{margin-bottom:20px}
+.field-label{font-size:13px;font-weight:600;color:var(--slate);margin-bottom:7px;display:flex;align-items:center;gap:4px}
+.req{color:var(--blue)}
+.input-row{position:relative}
+.input-row svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+input[type=text],input[type=tel]{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rs);padding:13px 14px 13px 42px;font-size:15px;font-family:inherit;color:var(--navy);outline:none;transition:border-color .2s,background .2s}
+input:focus{border-color:var(--blue);background:var(--white)}
+input::placeholder{color:var(--muted)}
+
+.date-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-bottom:20px}
+.date-strip::-webkit-scrollbar{display:none}
+.date-chip{flex-shrink:0;width:56px;text-align:center;padding:10px 0;border-radius:var(--r);border:1.5px solid var(--line);background:var(--white);cursor:pointer;transition:all .15s}
+.date-chip.selected{background:var(--navy);border-color:var(--navy)}
+.dc-day{font-size:11px;font-weight:500;color:var(--muted)}
+.dc-num{font-size:20px;font-weight:700;color:var(--navy);line-height:1.1;margin:2px 0}
+.dc-mon{font-size:10px;color:var(--muted)}
+.date-chip.selected .dc-day,.date-chip.selected .dc-mon{color:rgba(255,255,255,.5)}
+.date-chip.selected .dc-num{color:white}
+
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.time-btn{padding:11px 4px;text-align:center;font-size:13px;font-weight:500;color:var(--slate);background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rs);cursor:pointer;transition:all .15s;font-family:inherit}
+.time-btn:hover:not(.full){border-color:var(--blue-mid);color:var(--blue)}
+.time-btn.selected{background:var(--blue);border-color:var(--blue);color:white;font-weight:600}
+.time-btn.full{color:var(--muted);text-decoration:line-through;cursor:not-allowed;opacity:.45}
+.slot-hint{font-size:11px;color:var(--muted);margin-bottom:20px}
+
+.ta-wrap{position:relative}
+.ta-wrap svg{position:absolute;left:14px;top:15px;width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+textarea{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rs);padding:13px 14px 13px 42px;font-size:15px;font-family:inherit;color:var(--navy);outline:none;min-height:88px;resize:none;line-height:1.55;transition:border-color .2s,background .2s}
+textarea:focus{border-color:var(--blue);background:var(--white)}
+textarea::placeholder{color:var(--muted)}
+.char-ct{font-size:11px;color:var(--muted);text-align:right;margin-top:4px}
+
+.summary-card{background:var(--surface);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.summary-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.summary-row:last-child{border-bottom:none}
+.sr-key{font-size:13px;color:var(--muted);flex-shrink:0;margin-right:12px}
+.sr-val{font-size:13px;font-weight:600;color:var(--navy);text-align:right}
+.confirm-note{background:var(--cyan-pale);border-radius:var(--rs);padding:12px 14px;display:flex;gap:10px;margin-bottom:20px}
+.confirm-note svg{width:16px;height:16px;stroke:var(--cyan);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+.confirm-note p{font-size:13px;color:#0A6F99;line-height:1.5}
+
+.bottom-action{position:absolute;bottom:0;left:0;right:0;padding:12px 20px 30px;background:var(--white);border-top:1px solid var(--line)}
+.btn-main{width:100%;padding:15px;background:var(--navy);color:white;border:none;border-radius:var(--r);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s}
+.btn-main:active{transform:scale(.98);opacity:.9}
+.btn-main svg{width:18px;height:18px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+#page-home{padding:0}
+.home-head{background:var(--navy);padding:42px 22px 38px;position:relative;overflow:hidden}
+.home-head::before{content:'';position:absolute;top:-120px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(56,182,232,.05)}
+.home-head::after{content:'';position:absolute;bottom:-100px;left:-50px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.025)}
+.home-logo-row{display:flex;align-items:center;gap:16px;margin-bottom:22px;position:relative;z-index:1}
+.home-brand{font-size:24px;font-weight:700;color:white;letter-spacing:1.5px;line-height:1;margin-bottom:4px}
+.home-brand-en{font-size:12px;color:rgba(255,255,255,.55)}
+.home-brand-th{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.open-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:100px;padding:6px 13px;font-size:12px;color:rgba(255,255,255,.75);position:relative;z-index:1}
+.dot-green{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.home-tagline{font-size:13px;color:rgba(255,255,255,.45);margin-top:12px;position:relative;z-index:1}
+
+.home-body{padding:22px 20px 100px}
+.quick-book{background:var(--navy);border-radius:var(--r);padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:22px;cursor:pointer;border:none;width:100%;font-family:inherit;text-align:left;transition:opacity .15s}
+.quick-book:active{opacity:.85}
+.qb-icon{width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qb-icon svg{width:22px;height:22px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.qb-text{flex:1}
+.qb-title{font-size:15px;font-weight:700;color:white}
+.qb-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px}
+.qb-arr svg{width:20px;height:20px;stroke:rgba(255,255,255,.4);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.info-tile{background:var(--surface);border-radius:var(--r);padding:14px}
+.info-tile svg{width:20px;height:20px;stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-bottom:8px}
+.it-val{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.it-lbl{font-size:11px;color:var(--muted)}
+
+.section-hd{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px}
+.svc-list{display:flex;flex-direction:column;gap:8px}
+.svc-item{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:border-color .15s}
+.svc-item:active{border-color:var(--blue-mid)}
+.si-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.si-icon svg{width:20px;height:20px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.si-name{font-size:14px;font-weight:600;color:var(--navy)}
+.si-desc{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+.si-arr svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+.success-ring{width:86px;height:86px;border-radius:50%;background:var(--green-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.success-ring svg{width:40px;height:40px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.success-ref{background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--r);padding:18px;margin:18px 0}
+.ref-lbl{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.ref-code{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:3px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="back-btn" id="backBtn" onclick="goBack()" style="visibility:hidden">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="topbar-logo" id="topbarLogo">
+      <svg width="34" height="34" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tg1" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0E1F4D"/>
+            <stop offset="100%" stop-color="#38B6E8"/>
+          </linearGradient>
+          <linearGradient id="tg2" x1="10" y1="10" x2="50" y2="55" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1A4DB3"/>
+            <stop offset="100%" stop-color="#38B6E8"/>
+          </linearGradient>
+        </defs>
+        <path d="M6 48 L6 14 L30 36 L54 14 L54 48" stroke="url(#tg1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M27 33 C25 26 18 22 19 16 C20 10 25 7 30 7 C35 7 40 10 41 16 C42 22 35 26 33 33" stroke="url(#tg2)" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <circle cx="30" cy="40" r="4" fill="url(#tg2)"/>
+      </svg>
+      <div>
+        <div class="topbar-brand">MOR CLINIC</div>
+        <div class="topbar-brand2">การแพทย์แผนไทยประยุกต์</div>
+      </div>
+    </div>
+    <div class="topbar-center" id="topbarCenter">
+      <div class="topbar-title" id="topbarTitle"></div>
+      <div class="topbar-sub" id="topbarSub">MOR CLINIC</div>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="home-head">
+      <div class="home-logo-row">
+        <svg width="54" height="54" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hg1" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="rgba(255,255,255,.95)"/>
+              <stop offset="100%" stop-color="rgba(56,182,232,.8)"/>
+            </linearGradient>
+            <linearGradient id="hg2" x1="10" y1="5" x2="50" y2="55" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="rgba(255,255,255,.75)"/>
+              <stop offset="100%" stop-color="#38B6E8"/>
+            </linearGradient>
+          </defs>
+          <path d="M6 48 L6 14 L30 36 L54 14 L54 48" stroke="url(#hg1)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M27 33 C25 26 18 22 19 16 C20 10 25 7 30 7 C35 7 40 10 41 16 C42 22 35 26 33 33" stroke="url(#hg2)" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <circle cx="30" cy="40" r="4" fill="url(#hg2)"/>
+        </svg>
+        <div>
+          <div class="home-brand">MOR CLINIC</div>
+          <div class="home-brand-en">Applied Thai Traditional Medicine</div>
+          <div class="home-brand-th">มอร์ คลินิกการแพทย์แผนไทยประยุกต์</div>
+        </div>
+      </div>
+      <div class="open-pill"><span class="dot-green"></span> เปิดบริการ 09:00 – 19:00 น. ทุกวัน</div>
+      <div class="home-tagline">สะอาด · ได้มาตรฐาน · ใส่ใจทุกเคส</div>
+    </div>
+
+    <div class="home-body">
+      <button class="quick-book" onclick="showPage('1')">
+        <div class="qb-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+        </div>
+        <div class="qb-text">
+          <div class="qb-title">จองคิวนัดหมาย</div>
+          <div class="qb-sub">ง่าย 4 ขั้นตอน · รับยืนยันภายใน 30 นาที</div>
+        </div>
+        <div class="qb-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </button>
+
+
+      <div class="section-hd">บริการของเรา</div>
+      <div class="svc-list">
+        <div class="svc-item" onclick="quickBook('นวดกดจุดรักษา','sv-1')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></div>
+          <div style="flex:1"><div class="si-name">นวดกดจุดรักษา</div><div class="si-desc">ปรับสมดุลกล้ามเนื้อ ออฟฟิศซินโดรม ปวดเมื่อยเฉพาะจุด</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('ครอบแก้วสูญญากาศ','sv-2')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v6a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V9z"/><path d="M4 18h16"/></svg></div>
+          <div style="flex:1"><div class="si-name">ครอบแก้วสูญญากาศ</div><div class="si-desc">กระตุ้นการไหลเวียนเลือด ลดความตึงเกร็งของกล้ามเนื้อ</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('กรอกโลหิต','sv-3')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
+          <div style="flex:1"><div class="si-name">กรอกโลหิต</div><div class="si-desc">ระบายเลือดเสีย ลดการตึงรั้งของเส้นเอ็นและกล้ามเนื้อ</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('ประคบสมุนไพร','sv-4')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M12 2s8 3 8 10-8 10-8 10S4 19 4 12 12 2 12 2z"/><path d="M12 2v20"/></svg></div>
+          <div style="flex:1"><div class="si-name">ประคบสมุนไพร</div><div class="si-desc">บรรเทาอาการปวดบวม ลดการอักเสบกล้ามเนื้อด้วยความร้อน</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('อบสมุนไพร','sv-5')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.59-6.59A3 3 0 1 1 19 13H2"/></svg></div>
+          <div style="flex:1"><div class="si-name">อบสมุนไพร</div><div class="si-desc">ขับเหงื่อและของเสีย กระตุ้นระบบไหลเวียนโลหิตและลมปราณ</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('ปรับโครงสร้างร่างกาย(จัดกระดูก)','sv-6')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="5 12 12 5 19 12"/><polyline points="5 17 12 10 19 17"/></svg></div>
+          <div style="flex:1"><div class="si-name">ปรับโครงสร้างร่างกาย(จัดกระดูก)</div><div class="si-desc">ปรับสมดุลข้อต่อ กระดูก และระบบประสาทให้ทำงานปกติ</div></div>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="svc-item" onclick="quickBook('ดูแลแม่หลังคลอด','sv-7')">
+          <div class="si-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div style="flex:1"><div class="si-name">ดูแลแม่หลังคลอด</div><div class="si-desc">นวดเปิดท่อน้ำนม อยู่ไฟหลังคลอด ฟื้นฟูร่างกายมารดา</div></div>
+          <span class="badge-pill badge-pop">ยอดนิยม</span>
+          <div class="si-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="page" id="page-1">
+    <div class="step-label">ขั้นตอน 1 จาก 4</div>
+    <div class="page-heading">ข้อมูลผู้รับบริการ</div>
+    <div class="page-sub">กรอกข้อมูลเพื่อยืนยันตัวตนและติดต่อกลับ</div>
+    <div class="field">
+      <div class="field-label">ชื่อ-นามสกุล <span class="req">*</span></div>
+      <div class="input-row">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" id="f-name" placeholder="นายรักดี มีสุข">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">เบอร์โทรศัพท์ <span class="req">*</span></div>
+      <div class="input-row">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 5.61 5.61l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.27 16c.009.307.009.614 0 .92z"/></svg>
+        <input type="tel" id="f-phone" placeholder="0987654321">
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-label">ประเภทผู้รับบริการ <span class="req">*</span></div>
+      <div class="choice-grid">
+        <div class="choice-card selected" id="pt-old" onclick="selectPatient('old')">
+          <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="choice-text"><div class="choice-name">คนไข้เก่า</div><div class="choice-desc">เคยรับบริการที่ MOR CLINIC มาก่อน</div></div>
+          <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="choice-card" id="pt-new" onclick="selectPatient('new')">
+          <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+          <div class="choice-text"><div class="choice-name">คนไข้ใหม่</div><div class="choice-desc">ยังไม่เคยรับบริการที่ MOR CLINIC</div></div>
+          <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="page" id="page-2">
+    <div class="step-label">ขั้นตอน 2 จาก 4</div>
+    <div class="page-heading">เลือกบริการ</div>
+    <div class="page-sub">แตะเพื่อเลือกบริการที่ต้องการรับ</div>
+    <div class="choice-grid" id="serviceGrid">
+      <div class="choice-card" id="sv-1" onclick="selectService('นวดกดจุดรักษา','sv-1')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg></div>
+        <div class="choice-text"><div class="choice-name">นวดกดจุดรักษา</div><div class="choice-desc">ปรับสมดุลกล้ามเนื้อ ออฟฟิศซินโดรม ปวดเมื่อยเฉพาะจุด</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-2" onclick="selectService('ครอบแก้วสูญญากาศ','sv-2')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v6a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V9z"/><path d="M4 18h16"/></svg></div>
+        <div class="choice-text"><div class="choice-name">ครอบแก้วสูญญากาศ</div><div class="choice-desc">กระตุ้นการไหลเวียนเลือด ลดความตึงเกร็งของกล้ามเนื้อ</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-3" onclick="selectService('กรอกโลหิต','sv-3')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
+        <div class="choice-text"><div class="choice-name">กรอกโลหิต</div><div class="choice-desc">ระบายเลือดเสีย ลดการตึงรั้งของเส้นเอ็นและกล้ามเนื้อ</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-4" onclick="selectService('ประคบสมุนไพร','sv-4')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M12 2s8 3 8 10-8 10-8 10S4 19 4 12 12 2 12 2z"/><path d="M12 2v20"/></svg></div>
+        <div class="choice-text"><div class="choice-name">ประคบสมุนไพร</div><div class="choice-desc">บรรเทาอาการปวม บวม ลดการอักเสบกล้ามเนื้อด้วยความร้อน</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-5" onclick="selectService('อบสมุนไพร','sv-5')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.59-6.59A3 3 0 1 1 19 13H2"/></svg></div>
+        <div class="choice-text"><div class="choice-name">อบสมุนไพร</div><div class="choice-desc">ขับเหงื่อและของเสีย กระตุ้นระบบไหลเวียนโลหิตและลมปราณ</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-6" onclick="selectService('ปรับโครงสร้างร่างกาย(จัดกระดูก)','sv-6')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="5 12 12 5 19 12"/><polyline points="5 17 12 10 19 17"/></svg></div>
+        <div class="choice-text"><div class="choice-name">ปรับโครงสร้างร่างกาย(จัดกระดูก)</div><div class="choice-desc">ปรับสมดุลข้อต่อ กระดูก และระบบประสาทให้ทำงานปกติ</div></div>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+      <div class="choice-card" id="sv-7" onclick="selectService('ดูแลแม่หลังคลอด','sv-7')">
+        <div class="choice-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+        <div class="choice-text"><div class="choice-name">ดูแลแม่หลังคลอด</div><div class="choice-desc">นวดเปิดท่อน้ำนม อยู่ไฟหลังคลอด ฟื้นฟูร่างกายมารดา</div></div>
+        <span class="badge-pill badge-pop">ยอดนิยม</span>
+        <div class="choice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="page" id="page-3">
+    <div class="step-label">ขั้นตอน 3 จาก 4</div>
+    <div class="page-heading">เลือกวันและเวลา</div>
+    <div class="page-sub">จำกัด 3 คิว/รอบเวลา กรุณาเลือกช่วงที่ต้องการ</div>
+    <div class="field-label" style="margin-bottom:10px">วันที่นัดหมาย <span class="req">*</span></div>
+    <div class="date-strip" id="dateStrip"></div>
+    <div class="field-label" style="margin-bottom:10px">เวลาที่ต้องการ <span class="req">*</span></div>
+    <div class="time-grid" id="timeGrid"></div>
+    <div class="slot-hint">ช่องขีดทับ = คิวเต็มแล้ว</div>
+    <div class="field">
+      <div class="field-label">อาการเบื้องต้น <span class="req">*</span></div>
+      <div class="ta-wrap">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <textarea id="f-symptom" maxlength="200" placeholder="เช่น ปวดสะบักจมร้าวลงแขนซ้าย เป็นมา 2 สัปดาห์" oninput="document.getElementById('charCt').textContent=this.value.length+'/200'"></textarea>
+      </div>
+      <div class="char-ct" id="charCt">0/200</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="page" id="page-4">
+    <div class="step-label">ขั้นตอน 4 จาก 4</div>
+    <div class="page-heading">ตรวจสอบข้อมูล</div>
+    <div class="page-sub">กรุณาตรวจสอบให้ถูกต้องก่อนยืนยัน</div>
+    <div class="summary-card" id="summaryCard"></div>
+    <div class="confirm-note">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>ทีมงาน MOR CLINIC จะโทรยืนยันนัดหมายภายใน 30 นาที กรุณาเตรียมรับสาย</p>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="page" id="page-success" style="padding-top:40px;text-align:center">
+    <div class="success-ring">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="page-heading" style="text-align:center">จองคิวสำเร็จ!</div>
+    <p style="color:var(--muted);font-size:14px;margin-top:6px;line-height:1.6">MOR CLINIC ได้รับข้อมูลของคุณเรียบร้อยแล้ว</p>
+    <div class="success-ref">
+      <div class="ref-lbl">รหัสการจอง</div>
+      <div class="ref-code" id="refCode">—</div>
+    </div>
+    <div id="successDetail" style="font-size:13px;color:var(--muted);line-height:1.9;background:var(--surface);border-radius:var(--r);padding:16px;text-align:left;margin-top:4px"></div>
+    <button class="btn-main" style="margin-top:24px" onclick="showPage('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>กลับหน้าหลัก</span>
+    </button>
+  </div>
+
+  <!-- BOTTOM ACTION BAR -->
+  <div class="bottom-action" id="bottomAction" style="display:none">
+    <button class="btn-main" onclick="handleNext()">
+      <span id="btnLabel">ถัดไป</span>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+let cur='home',selPt='old',selSvc='',selDate='',selTime='';
+const FULL=['10:00','13:30'];
+const DAYS=['อา','จ','อ','พ','พฤ','ศ','ส'];
+const MONS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  cur=id;
+  const pct={home:0,'1':25,'2':50,'3':75,'4':90,success:100}[id]||0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  const isHome=id==='home'||id==='success';
+  document.getElementById('backBtn').style.visibility=isHome?'hidden':'visible';
+  document.getElementById('bottomAction').style.display=isHome?'none':'block';
+  const logo=document.getElementById('topbarLogo');
+  const center=document.getElementById('topbarCenter');
+  if(id==='home'){logo.style.display='flex';center.style.display='none';}
+  else{logo.style.display='none';center.style.display='block';
+    const t={'1':'ข้อมูลผู้รับบริการ','2':'เลือกบริการ','3':'วันและเวลา','4':'ยืนยันการจอง','success':'สำเร็จ'};
+    document.getElementById('topbarTitle').textContent=t[id]||'จองคิว';
+  }
+  const lbl={'1':'ถัดไป — เลือกบริการ','2':'ถัดไป — เลือกวันเวลา','3':'ถัดไป — ตรวจสอบ','4':'ยืนยันการจอง'};
+  if(lbl[id])document.getElementById('btnLabel').textContent=lbl[id];
+  if(id==='3'){buildDates();buildTimes();}
+  if(id==='4')buildSummary();
+}
+
+function quickBook(svc,sid){showPage('1');setTimeout(()=>{showPage('2');selectService(svc,sid);},30);}
+function goBack(){const p={1:'home',2:'1',3:'2',4:'3'};if(p[cur])showPage(p[cur]);}
+function selectPatient(t){selPt=t;['old','new'].forEach(x=>document.getElementById('pt-'+x).classList.toggle('selected',x===t));}
+function selectService(name,id){
+  selSvc=name;
+  document.querySelectorAll('#serviceGrid .choice-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+}
+function buildDates(){
+  const strip=document.getElementById('dateStrip');strip.innerHTML='';
+  const now=new Date();
+  for(let i=0;i<14;i++){
+    const d=new Date(now);d.setDate(now.getDate()+i);
+    const chip=document.createElement('div');
+    chip.className='date-chip'+(i===0?' selected':'');
+    if(i===0)selDate=`${d.getDate()} ${MONS[d.getMonth()]} ${d.getFullYear()+543}`;
+    chip.innerHTML=`<div class="dc-day">${DAYS[d.getDay()]}</div><div class="dc-num">${d.getDate()}</div><div class="dc-mon">${MONS[d.getMonth()]}</div>`;
+    chip.onclick=()=>{
+      document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selDate=`${d.getDate()} ${MONS[d.getMonth()]} ${d.getFullYear()+543}`;
+    };
+    strip.appendChild(chip);
+  }
+}
+function buildTimes(){
+  const grid=document.getElementById('timeGrid');grid.innerHTML='';
+  ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'].forEach(t=>{
+    const btn=document.createElement('button');
+    const full=FULL.includes(t);
+    btn.className='time-btn'+(full?' full':'');
+    btn.textContent=t;
+    if(!full)btn.onclick=()=>{
+      document.querySelectorAll('.time-btn:not(.full)').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');selTime=t;
+    };
+    grid.appendChild(btn);
+  });
+}
+function buildSummary(){
+  const rows=[
+    ['ชื่อ-นามสกุล',document.getElementById('f-name').value||'-'],
+    ['เบอร์โทร',document.getElementById('f-phone').value||'-'],
+    ['ประเภท',selPt==='old'?'คนไข้เก่า':'คนไข้ใหม่'],
+    ['บริการ',selSvc||'-'],
+    ['วันที่',selDate||'-'],
+    ['เวลา',selTime?selTime+' น.':'—'],
+    ['อาการ',document.getElementById('f-symptom').value||'-'],
+  ];
+  document.getElementById('summaryCard').innerHTML=rows.map(([k,v])=>`<div class="summary-row"><span class="sr-key">${k}</span><span class="sr-val">${v}</span></div>`).join('');
+}
+function handleNext(){
+  if(cur==='1'){
+    if(!document.getElementById('f-name').value.trim()||!document.getElementById('f-phone').value.trim()){alert('กรุณากรอกชื่อและเบอร์โทรให้ครบ');return;}
+    showPage('2');
+  }else if(cur==='2'){
+    if(!selSvc){alert('กรุณาเลือกบริการ');return;}
+    showPage('3');
+  }else if(cur==='3'){
+    if(!selDate||!selTime){alert('กรุณาเลือกวันและเวลา');return;}
+    if(!document.getElementById('f-symptom').value.trim()){alert('กรุณากรอกอาการเบื้องต้น');return;}
+    showPage('4');
+  }else if(cur==='4'){
+    const ref='MC'+Date.now().toString().slice(-6);
+    document.getElementById('refCode').textContent=ref;
+    const name=document.getElementById('f-name').value;
+    const phone=document.getElementById('f-phone').value;
+    document.getElementById('successDetail').innerHTML=
+      `<b>${name}</b> · ${phone}<br>${selSvc}<br>${selDate} เวลา ${selTime} น.`;
+    showPage('success');
+  }
+}
+</script>
+</body>
+</html>

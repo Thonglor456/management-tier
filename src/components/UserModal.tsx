@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import X from 'lucide-react/dist/esm/icons/x';
 import type { User, Branch } from '../types';
+import { ConfirmModal } from './ui/ConfirmModal';
 
 interface UserModalProps {
     showModal: boolean;
@@ -14,24 +15,45 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
     const [role, setRole] = useState<'ADMIN' | 'USER'>('USER');
     const [branchId, setBranchId] = useState('');
     const [name, setName] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [showPromoteConfirm, setShowPromoteConfirm] = useState(false);
 
     useEffect(() => {
         if (user) {
             setRole(user.role);
             setBranchId(user.branchId || '');
             setName(user.name);
+            setIsSaving(false);
+            setShowPromoteConfirm(false);
         }
     }, [user]);
+
+    const doSave = async () => {
+        if (!user || isSaving) return;
+        setIsSaving(true);
+        try {
+            await onSave(user.id, {
+                role,
+                branchId: branchId || undefined, // Send undefined instead of null to match User type
+                name
+            });
+        } finally {
+            setIsSaving(false);
+            setShowPromoteConfirm(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
 
-        await onSave(user.id, {
-            role,
-            branchId: branchId || undefined, // Send undefined instead of null to match User type
-            name
-        });
+        // เลื่อนขั้นเป็น Admin (เห็นเงินทุกสาขา) ต้องยืนยันก่อนเสมอ
+        if (role === 'ADMIN' && user.role !== 'ADMIN') {
+            setShowPromoteConfirm(true);
+            return;
+        }
+
+        await doSave();
     };
 
     if (!showModal || !user) return null;
@@ -98,12 +120,23 @@ export const UserModal: React.FC<UserModalProps> = ({ showModal, user, branches,
 
                     <button
                         type="submit"
-                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-[0.98]"
+                        disabled={isSaving}
+                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-violet-900/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        บันทึกข้อมูล
+                        {isSaving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                     </button>
                 </form>
             </div>
+
+            <ConfirmModal
+                show={showPromoteConfirm}
+                title="ยืนยันเลื่อนเป็นผู้ดูแล (Admin)"
+                message={`คุณต้องการให้ "${name}" เป็น Admin ใช่หรือไม่?\nAdmin จะสามารถเห็นและแก้ไขข้อมูลการเงินของทุกสาขาได้`}
+                variant="warning"
+                confirmText="ยืนยัน"
+                onConfirm={doSave}
+                onCancel={() => setShowPromoteConfirm(false)}
+            />
         </div>
     );
 };

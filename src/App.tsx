@@ -15,7 +15,8 @@ import type {
 } from './types';
 import {
   DEFAULT_INCOME_CATEGORIES,
-  DEFAULT_EXPENSE_CATEGORIES
+  DEFAULT_EXPENSE_CATEGORIES,
+  getLocalDateString
 } from './constants';
 import {
   subscribeToBranches,
@@ -41,10 +42,10 @@ import { TransactionList } from './components/TransactionList';
 import { Reports } from './components/Reports';
 import { TransactionForm } from './components/TransactionForm';
 import { BranchModal } from './components/BranchModal';
-
 import { UserManagement } from './components/UserManagement';
 import { ReconciliationModal } from './components/ReconciliationModal';
 import { SetBalanceModal } from './components/SetBalanceModal';
+import { ConfirmModal } from './components/ui/ConfirmModal';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getUserProfile } from './services/dataService';
 
@@ -84,8 +85,8 @@ export default function TierCoffeeApp() {
   const [chartView, setChartView] = useState<'7d' | '1m' | '3m'>('7d');
   const [selectedBranchId, setSelectedBranchId] = useLocalStorage<string>('tier-coffee-selected-branch', 'HQ');
   // Date State for Dashboard
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(getLocalDateString());
+  const [endDate, setEndDate] = useState(getLocalDateString());
 
   // Category State
   const [incomeCategories, setIncomeCategories] = useState<string[]>(DEFAULT_INCOME_CATEGORIES);
@@ -98,7 +99,7 @@ export default function TierCoffeeApp() {
   const [showForm, setShowForm] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [lastTransactionDate, setLastTransactionDate] = useState(new Date().toISOString().split('T')[0]);
+  const [lastTransactionDate, setLastTransactionDate] = useState(getLocalDateString());
 
   // Passed to form for editing:
   const editingTransaction = useMemo(() => {
@@ -108,7 +109,24 @@ export default function TierCoffeeApp() {
   // Branch Management State
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [branchNameInput, setBranchNameInput] = useState('');
+  const [branchUrlInput, setBranchUrlInput] = useState('');
+  const [branchTabsInput, setBranchTabsInput] = useState('');
   const [isEditingBranch, setIsEditingBranch] = useState(false);
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    variant: 'danger'
+  });
 
 
   // --- Branch Name Logic (Must be at top level) ---
@@ -117,54 +135,45 @@ export default function TierCoffeeApp() {
     return branches.find(b => b.id === selectedBranchId)?.name || 'สาขาไม่ระบุ/ถูกลบ';
   }, [selectedBranchId, branches]);
 
-  // Validate selectedBranchId when branches change
-  useEffect(() => {
-    if (branches.length > 0 && selectedBranchId !== 'HQ') {
-      const exists = branches.find(b => b.id === selectedBranchId);
-      if (!exists) {
-        setSelectedBranchId('HQ');
-      }
-    }
-  }, [branches, selectedBranchId]);
-
-
   // --- Auth Listening ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setAuthLoading(true);
       if (user) {
-        // Default user data from Auth
-        let userData: User = {
-          id: user.uid,
-          username: user.email?.split('@')[0] || 'unknown',
-          name: user.displayName || user.email?.split('@')[0] || 'User',
-          role: 'USER', // Default to USER until profile is loaded
-        };
-
         try {
-          // Try to fetch profile from Firestore
-          const profile = await getUserProfile(user.uid);
-          if (profile) {
-            userData = { ...userData, ...profile };
+          // Robust local fallback in case of Firestore query hangs or offline
+          const fallbackUserData: User = {
+            id: user.uid,
+            username: user.email?.split('@')[0] || 'unknown',
+            name: user.displayName || user.email?.split('@')[0] || 'User',
+            role: 'USER',
+          };
+
+          // FORCE ADMIN for master accounts
+          if (user.email === 'admin@tiercoffee.com' || user.email === 'admin@tier.com') {
+            fallbackUserData.role = 'ADMIN';
+            fallbackUserData.name = 'Admin';
           }
 
-          // FORCE ADMIN for master account
-          if (user.email === 'admin@tiercoffee.com') {
-            userData.role = 'ADMIN';
-            userData.name = 'Admin';
+          // Fetch profile with a 2.5-second timeout race pattern to guarantee the loading screen clears
+          const profilePromise = getUserProfile(user.uid);
+          const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500));
+          
+          const profile = await Promise.race([profilePromise, timeoutPromise]).catch(err => {
+            console.error("Profile fetch promise failed, using fallback:", err);
+            return null;
+          });
+
+          const userData: User = profile ? { ...profile } : fallbackUserData;
+
+          setCurrentUser(userData);
+
+          // Non-admin: Force their assigned branch immediately
+          if (userData.role !== 'ADMIN' && userData.branchId) {
+            setSelectedBranchId(userData.branchId);
           }
         } catch (err) {
-          console.error("Error fetching user profile:", err);
-          // STILL FORCE ADMIN even if profile fetch fails
-          if (user.email === 'admin@tiercoffee.com') {
-            userData.role = 'ADMIN';
-            userData.name = 'Admin';
-          }
-        }
-
-        setCurrentUser(userData);
-
-        if (userData.branchId) {
-          setSelectedBranchId(userData.branchId);
+          console.error("Auth error:", err);
         }
       } else {
         setCurrentUser(null);
@@ -173,6 +182,44 @@ export default function TierCoffeeApp() {
     });
     return () => unsubscribe();
   }, []);
+
+  // ---------------------------------------------------------------------
+  // Auth loading timeout fallback – prevents app from staying on the
+  // "Loading Application..." screen forever if the auth listener is stuck.
+  // After 5 seconds we clear the loading flag and show a warning.
+  // ---------------------------------------------------------------------
+  useEffect(() => {
+    if (!authLoading) return;
+    const timer = setTimeout(() => {
+      console.warn('Auth loading timeout – proceeding with no user');
+      setAuthLoading(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [authLoading]);
+
+  // Sync with URL param on initial load (ADMIN only)
+  useEffect(() => {
+    if (currentUser?.role === 'ADMIN' && branches.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const branchParam = params.get('branch');
+      if (branchParam && branchParam !== selectedBranchId && branches.some(b => b.id === branchParam)) {
+        setSelectedBranchId(branchParam);
+      }
+    }
+  }, [branches, currentUser]);
+
+  // Update URL when branch changes (ADMIN only)
+  useEffect(() => {
+    if (currentUser?.role === 'ADMIN') {
+      const url = new URL(window.location.href);
+      if (selectedBranchId === 'HQ') {
+        url.searchParams.delete('branch');
+      } else {
+        url.searchParams.set('branch', selectedBranchId);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [selectedBranchId, currentUser]);
 
   // --- Load Categories from Firestore ---
   useEffect(() => {
@@ -225,6 +272,8 @@ export default function TierCoffeeApp() {
   // --- Branch Management Logic ---
   const openAddBranch = () => {
     setBranchNameInput('');
+    setBranchUrlInput('');
+    setBranchTabsInput('');
     setIsEditingBranch(false);
     setShowBranchModal(true);
   };
@@ -234,18 +283,20 @@ export default function TierCoffeeApp() {
     const branch = branches.find(b => b.id === selectedBranchId);
     if (branch) {
       setBranchNameInput(branch.name);
+      setBranchUrlInput(branch.googleSheetsUrl || '');
+      setBranchTabsInput(branch.googleSheetsTabs || '');
       setIsEditingBranch(true);
       setShowBranchModal(true);
     }
   };
 
-  const handleSaveBranch = async (name: string) => {
+  const handleSaveBranch = async (name: string, url?: string, tabs?: string) => {
     if (!name.trim()) return;
 
     if (isEditingBranch) {
-      await updateBranch(selectedBranchId, name);
+      await updateBranch(selectedBranchId, name, url, tabs);
     } else {
-      await addBranch(name);
+      await addBranch(name, url, tabs);
     }
     setShowBranchModal(false);
   };
@@ -315,7 +366,7 @@ export default function TierCoffeeApp() {
   // --- Calculations (Based on Filtered Data) ---
 
   const balances = useMemo(() => {
-    const bals: AccountBalance = { cash: 0, bank: 0, delivery: 0 };
+    const bals: AccountBalance = { cash: 0, bank: 0, delivery: 0, thaiChuaiThai: 0 };
     // Initialize with 0 for real data. Seed logic removed.
 
     filteredTransactions.forEach(t => {
@@ -437,21 +488,34 @@ export default function TierCoffeeApp() {
   };
 
   const deleteTransaction = async (id: string) => {
-    if (window.confirm('ยืนยันการลบรายการนี้?')) {
-      await deleteTransactionReal(id);
-      handleCloseForm();
-    }
+    setConfirmModal({
+      show: true,
+      title: 'ลบรายการ',
+      message: 'คุณต้องการลบรายการนี้ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteTransactionReal(id);
+          handleCloseForm();
+          setConfirmModal(prev => ({ ...prev, show: false }));
+        } catch (error) {
+          console.error('Error deleting transaction:', error);
+          alert('เกิดข้อผิดพลาดในการลบรายการ');
+        }
+      }
+    });
   };
 
   // --- Batch Import from Google Sheets ---
   const handleBatchImport = async (
+    targetBranchId: string,
     newTransactions: Omit<Transaction, 'id'>[],
     datesToOverwrite: string[]
   ) => {
     // 1. Fetch transactions for this branch to avoid composite index requirements
     const q = query(
       collection(db, 'transactions'),
-      where('branchId', '==', selectedBranchId)
+      where('branchId', '==', targetBranchId)
     );
     const snap = await getDocs(q);
     
@@ -470,18 +534,22 @@ export default function TierCoffeeApp() {
     }
   };
 
-  const handleBulkCleanup = async (year: number) => {
+  const handleBulkCleanup = async (targetBranchId: string, year: number, month?: number) => {
     // 1. Fetch transactions for this branch
     const q = query(
       collection(db, 'transactions'),
-      where('branchId', '==', selectedBranchId)
+      where('branchId', '==', targetBranchId)
     );
     const snap = await getDocs(q);
     
-    // 2. Filter by year in memory and delete
+    // 2. Filter by year/month in memory and delete
+    const prefix = month 
+      ? `${year}-${String(month).padStart(2, '0')}-` 
+      : `${year}-`;
+
     for (const d of snap.docs) {
       const date = d.data().date;
-      if (date && date.startsWith(`${year}-`)) {
+      if (date && date.startsWith(prefix)) {
         await deleteDoc(doc(db, 'transactions', d.id));
       }
     }
@@ -507,7 +575,11 @@ export default function TierCoffeeApp() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="animate-pulse text-violet-400">Loading Application...</div>
+        <div className="animate-pulse text-violet-400">
+          Loading Application...
+          {/* Show extra hint after timeout */}
+          { /* The timeout effect will clear authLoading after 5s, but if it remains we can show a note */ }
+        </div>
       </div>
     );
   }
@@ -519,7 +591,7 @@ export default function TierCoffeeApp() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans relative selection:bg-violet-500/30 selection:text-violet-200">
+    <div className="flex flex-col min-h-screen bg-black text-zinc-100 font-sans">
 
       <Header
         currentUser={currentUser}
@@ -534,7 +606,7 @@ export default function TierCoffeeApp() {
       />
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto p-4 pb-24">
+      <main className="flex-1 w-full max-w-5xl mx-auto p-4 pb-24">
         {activeTab === 'dashboard' && (
           <Dashboard
             stats={stats}
@@ -587,6 +659,12 @@ export default function TierCoffeeApp() {
             currentBranchName={currentBranchName}
             expenseCategories={expenseCategories}
             formatCurrency={formatCurrency}
+            startDate={startDate}
+            endDate={endDate}
+            onRangeChange={(start: string, end: string) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
           />
         )}
 
@@ -605,92 +683,108 @@ export default function TierCoffeeApp() {
           />
         )}
 
-        {/* FAB Menu */}
-        <div className="fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3 pointer-events-none">
-          {showFabMenu && (
-            <div className="flex flex-col gap-3 pointer-events-auto animate-slide-up">
-              <button onClick={() => { setFormType('DIVIDEND'); setShowForm(true); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-200 px-4 py-2 rounded-full shadow-xl border border-zinc-700 font-medium hover:bg-zinc-700 hover:text-white transition-all">
-                ปันผล <span className="bg-purple-500/20 text-purple-400 p-2 rounded-full"><Coins size={20} /></span>
-              </button>
-              <button onClick={() => setShowSetBalance(true)} className="flex items-center gap-3 bg-zinc-800 text-zinc-200 px-4 py-2 rounded-full shadow-xl border border-zinc-700 font-medium hover:bg-zinc-700 hover:text-white transition-all">
-                ยกยอด <span className="bg-zinc-500/20 text-zinc-400 p-2 rounded-full"><PlusCircle size={20} className="rotate-45" /></span>
-              </button>
-              <button onClick={() => { setFormType('TRANSFER'); setShowForm(true); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-200 px-4 py-2 rounded-full shadow-xl border border-zinc-700 font-medium hover:bg-zinc-700 hover:text-white transition-all">
-                โยกย้าย <span className="bg-blue-500/20 text-blue-400 p-2 rounded-full"><ArrowRightLeft size={20} /></span>
-              </button>
-              <button onClick={() => { setFormType('EXPENSE'); setShowForm(true); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-200 px-4 py-2 rounded-full shadow-xl border border-zinc-700 font-medium hover:bg-zinc-700 hover:text-white transition-all">
-                รายจ่าย <span className="bg-rose-500/20 text-rose-400 p-2 rounded-full"><MinusCircle size={20} /></span>
-              </button>
-              <button onClick={() => { setFormType('INCOME'); setShowForm(true); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-200 px-4 py-2 rounded-full shadow-xl border border-zinc-700 font-medium hover:bg-zinc-700 hover:text-white transition-all">
-                รายรับ <span className="bg-emerald-500/20 text-emerald-400 p-2 rounded-full"><PlusCircle size={20} /></span>
-              </button>
-            </div>
-          )}
-          {activeTab !== 'admin' && (
-            <button onClick={() => setShowFabMenu(!showFabMenu)} className={`pointer-events-auto p-4 rounded-full shadow-2xl shadow-violet-900/40 transition-all duration-300 border border-white/10 ${showFabMenu ? 'bg-zinc-800 text-zinc-400 rotate-45' : 'bg-violet-600 border-violet-500 text-white hover:bg-violet-500 hover:scale-105'}`}>
-              <Plus size={28} />
-            </button>
-          )}
-        </div>
-
-        {/* Modals */}
-        <BranchModal
-          showBranchModal={showBranchModal}
-          isEditing={isEditingBranch}
-          initialName={branchNameInput}
-          onClose={() => setShowBranchModal(false)}
-          onSave={handleSaveBranch}
+        <ConfirmModal
+          show={confirmModal.show}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          variant={confirmModal.variant}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, show: false }))}
         />
-
-        <ReconciliationModal
-          show={showReconciliation}
-          onClose={() => setShowReconciliation(false)}
-          balances={balances}
-          formatCurrency={formatCurrency}
-          currentUser={currentUser}
-          selectedBranchId={selectedBranchId}
-        />
-
-        <SetBalanceModal
-          show={showSetBalance}
-          onClose={() => setShowSetBalance(false)}
-          balances={balances}
-          formatCurrency={formatCurrency}
-          currentUser={currentUser}
-          selectedBranchId={selectedBranchId}
-        />
-
-        <TransactionForm
-          showForm={showForm}
-          formType={formType}
-          editingId={editingId}
-          selectedBranchId={selectedBranchId}
-          currentBranchName={currentBranchName}
-          branches={branches} // Pass branches here
-          currentUser={currentUser}
-          incomeCategories={incomeCategories}
-          expenseCategories={expenseCategories}
-          lastTransactionDate={lastTransactionDate}
-          initialData={editingTransaction ? {
-            amount: editingTransaction.amount.toString(),
-            date: editingTransaction.date,
-            category: editingTransaction.category,
-            paymentMethod: editingTransaction.paymentMethod,
-            toAccount: editingTransaction.toAccount || 'bank',
-            name: editingTransaction.name || '',
-            note: editingTransaction.note || '',
-            branchId: editingTransaction.branchId // Pass existing branchId for editing
-          } : undefined}
-          onClose={handleCloseForm}
-          onSubmit={handleTransactionSubmit}
-          onDelete={deleteTransaction}
-          onAddCategory={handleAddCategory}
-          onEditCategory={handleEditCategory}
-          onDeleteCategory={handleDeleteCategory}
-          setTransactionData={() => { }}
-        />
-
       </main>
+
+      {/* FIXED FAB PORTAL - Using high-impact visibility */}
+      {activeTab !== 'admin' && !showForm && (
+        <div className="fixed bottom-24 right-6 z-[99999] flex flex-col items-end gap-3">
+          {showFabMenu && (
+            <div className="flex flex-col gap-3 animate-slide-up mb-3 items-end">
+                 <button onClick={() => { setFormType('DIVIDEND'); setShowForm(true); setShowFabMenu(false); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-100 px-4 py-2.5 rounded-full shadow-2xl border border-zinc-700 font-semibold hover:bg-zinc-700 transition-all active:scale-95">
+                  ปันผล <span className="bg-purple-500/20 text-purple-400 p-2 rounded-full"><Coins size={20} /></span>
+                </button>
+                
+                <button onClick={() => { setShowSetBalance(true); setShowFabMenu(false); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-100 px-4 py-2.5 rounded-full shadow-2xl border border-zinc-700 font-semibold hover:bg-zinc-700 transition-all active:scale-95">
+                  ยกยอด <span className="bg-zinc-500/20 text-zinc-400 p-2 rounded-full"><PlusCircle size={20} className="rotate-45" /></span>
+                </button>
+                <button onClick={() => { setFormType('TRANSFER'); setShowForm(true); setShowFabMenu(false); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-100 px-4 py-2.5 rounded-full shadow-2xl border border-zinc-700 font-semibold hover:bg-zinc-700 transition-all active:scale-95">
+                  โยกย้าย <span className="bg-blue-500/20 text-blue-400 p-2 rounded-full"><ArrowRightLeft size={20} /></span>
+                </button>
+                <button onClick={() => { setFormType('EXPENSE'); setShowForm(true); setShowFabMenu(false); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-100 px-4 py-2.5 rounded-full shadow-2xl border border-zinc-700 font-semibold hover:bg-zinc-700 transition-all active:scale-95">
+                  รายจ่าย <span className="bg-rose-500/20 text-rose-400 p-2 rounded-full"><MinusCircle size={20} /></span>
+                </button>
+                <button onClick={() => { setFormType('INCOME'); setShowForm(true); setShowFabMenu(false); }} className="flex items-center gap-3 bg-zinc-800 text-zinc-100 px-4 py-2.5 rounded-full shadow-2xl border border-zinc-700 font-semibold hover:bg-zinc-700 transition-all active:scale-95">
+                  รายรับ <span className="bg-emerald-500/20 text-emerald-400 p-2 rounded-full"><PlusCircle size={20} /></span>
+                </button>
+              </div>
+            )}
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowFabMenu(!showFabMenu); }}
+              className={`p-5 rounded-full shadow-[0_0_50px_rgba(124,58,237,0.6)] transition-all duration-300 border border-white/10 ${showFabMenu ? 'bg-zinc-800 text-zinc-400 rotate-45' : 'bg-violet-600 text-white hover:bg-violet-500 hover:scale-110 active:scale-90'}`}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Plus size={32} />
+            </button>
+          </div>
+        
+      )}
+
+      {/* Modals & Forms */}
+      <BranchModal
+        showBranchModal={showBranchModal}
+        isEditing={isEditingBranch}
+        initialName={branchNameInput}
+        initialUrl={branchUrlInput}
+        initialTabs={branchTabsInput}
+        onClose={() => setShowBranchModal(false)}
+        onSave={handleSaveBranch}
+      />
+
+      <ReconciliationModal
+        show={showReconciliation}
+        onClose={() => setShowReconciliation(false)}
+        balances={balances}
+        formatCurrency={formatCurrency}
+        currentUser={currentUser}
+        selectedBranchId={selectedBranchId}
+      />
+
+      <SetBalanceModal
+        show={showSetBalance}
+        onClose={() => setShowSetBalance(false)}
+        balances={balances}
+        formatCurrency={formatCurrency}
+        currentUser={currentUser}
+        selectedBranchId={selectedBranchId}
+        endDate={endDate}
+      />
+
+      <TransactionForm
+        showForm={showForm}
+        formType={formType}
+        editingId={editingId}
+        selectedBranchId={selectedBranchId}
+        currentBranchName={currentBranchName}
+        branches={branches}
+        currentUser={currentUser}
+        incomeCategories={incomeCategories}
+        expenseCategories={expenseCategories}
+        lastTransactionDate={lastTransactionDate}
+        initialData={editingTransaction ? {
+          amount: editingTransaction.amount.toString(),
+          date: editingTransaction.date,
+          category: editingTransaction.category,
+          paymentMethod: editingTransaction.paymentMethod,
+          toAccount: editingTransaction.toAccount || 'bank',
+          note: editingTransaction.note || '',
+          branchId: editingTransaction.branchId
+        } : undefined}
+        onClose={handleCloseForm}
+        onSubmit={handleTransactionSubmit}
+        onDelete={deleteTransaction}
+        onAddCategory={handleAddCategory}
+        onEditCategory={handleEditCategory}
+        onDeleteCategory={handleDeleteCategory}
+        setTransactionData={() => { }}
+      />
 
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -698,8 +792,8 @@ export default function TierCoffeeApp() {
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out; }
-        @keyframes slide-up { from { transform: translateY(100%) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-        .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slide-up { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
       `}</style>
     </div>
   );

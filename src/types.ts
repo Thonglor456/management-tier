@@ -8,6 +8,8 @@ export interface Branch {
     actualBankBalance?: number; // Real balance in bank account
     actualCashBalance?: number; // Real balance in cash
     actualDeliveryBalance?: number; // Real balance in delivery accounts
+    googleSheetsUrl?: string; // Link to Google Sheets for import
+    googleSheetsTabs?: string; // Comma-separated tab names to import from
 }
 
 export interface User {
@@ -36,6 +38,7 @@ export interface AccountBalance {
     cash: number;
     bank: number;
     delivery: number;
+    thaiChuaiThai: number;
 }
 
 export interface ReconciliationRecord {

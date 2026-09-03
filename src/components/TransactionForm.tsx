@@ -30,7 +30,6 @@ interface TransactionFormProps {
         category: string;
         paymentMethod: string;
         toAccount: string;
-        name: string; // Add name field
         note: string;
         branchId?: string; // Add optional branchId to initialData
     };
@@ -51,6 +50,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     selectedBranchId,
     currentBranchName: _currentBranchName, // eslint-disable-line @typescript-eslint/no-unused-vars
     branches,
+    currentUser,
     incomeCategories,
     expenseCategories,
     initialData,
@@ -72,9 +72,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     );
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [toAccount, setToAccount] = useState('bank');
-    const [name, setName] = useState('');
     const [note, setNote] = useState('');
     const [isManagingCats, setIsManagingCats] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Local branch selection state
     const [formBranchId, setFormBranchId] = useState(selectedBranchId);
@@ -90,8 +90,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 setCategory(initialData.category);
                 setPaymentMethod(initialData.paymentMethod);
                 setToAccount(initialData.toAccount || 'bank');
-                setName(initialData.name || '');
-                setNote(initialData.note);
+                setNote(initialData.note || '');
                 // Use the transaction's branch, or fallback to selected
                 setFormBranchId(initialData.branchId || selectedBranchId);
             } else {
@@ -107,12 +106,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
                 setPaymentMethod('cash');
                 setToAccount('bank');
-                setName('');
                 setNote('');
 
                 // Keep the currently selected branch if it's valid (not HQ)
                 // Only default to first branch if user is viewing "All Branches"
-                if (selectedBranchId !== 'HQ') {
+                if (currentUser?.role !== 'ADMIN' && currentUser?.branchId) {
+                    setFormBranchId(currentUser.branchId);
+                } else if (selectedBranchId !== 'HQ') {
                     setFormBranchId(selectedBranchId);
                 } else if (effectiveBranches.length > 0) {
                     setFormBranchId(effectiveBranches[0].id);
@@ -121,31 +121,38 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 }
             }
             setIsManagingCats(false);
+            setIsSubmitting(false);
         }
-    }, [showForm, editingId, initialData, formType, incomeCategories, expenseCategories, selectedBranchId, branches]);
+    }, [showForm, editingId, initialData, formType, incomeCategories, expenseCategories, selectedBranchId, branches, currentUser]);
 
     // If we are managing categories, we should start with a valid one if current becomes invalid
     useEffect(() => {
         const cats = formType === 'INCOME' ? incomeCategories : expenseCategories;
-        if (!cats.includes(category) && cats.length > 0) {
+        // Don't overwrite the category if we are editing an existing transaction
+        if (!cats.includes(category) && cats.length > 0 && !editingId) {
             setCategory(cats[0]);
         }
-    }, [incomeCategories, expenseCategories, formType]);
+    }, [incomeCategories, expenseCategories, formType, editingId]);
 
     if (!showForm) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({
-            amount,
-            date,
-            category,
-            paymentMethod,
-            toAccount,
-            name,
-            note,
-            branchId: formBranchId // Pass the selected branch ID
-        });
+        if (isSubmitting) return; // ป้องกันการกดบันทึกซ้ำซ้อน
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                amount,
+                date,
+                category,
+                paymentMethod,
+                toAccount,
+                note,
+                branchId: formBranchId // Pass the selected branch ID
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -167,7 +174,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                             value={formBranchId}
                             onChange={(e) => setFormBranchId(e.target.value)}
                             required
-                            className="bg-transparent text-white font-bold outline-none flex-grow"
+                            disabled={currentUser?.role !== 'ADMIN'}
+                            className="bg-transparent text-white font-bold outline-none flex-grow disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <option value="" disabled>กรุณาเลือกสาขา</option>
                             {effectiveBranches.map(b => (
@@ -183,13 +191,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-zinc-400 mb-1">รายการ (ชื่อ)</label>
-                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500 transition-all font-bold" placeholder="เช่น น้ำแข็ง, ยอดขายหน้าร้าน..." />
-                    </div>
-
-                    <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">จำนวนเงิน (บาท)</label>
-                        <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-violet-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
+                        <input type="number" min="0" step="0.01" autoFocus required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-violet-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
                     </div>
 
                     {formType !== 'TRANSFER' && formType !== 'DIVIDEND' && (
@@ -205,7 +208,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {(formType === 'INCOME' ? incomeCategories : expenseCategories).map(c => (
+                                {/* Ensure the currently selected category always renders as a chip so it can be 'selected' */}
+                                {Array.from(new Set([...(formType === 'INCOME' ? incomeCategories : expenseCategories), category].filter(Boolean))).map(c => (
                                     <div key={c} className="relative group">
                                         <button
                                             type="button"
@@ -270,8 +274,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                 <Trash2 size={20} />
                             </button>
                         )}
-                        <button type="submit" disabled={!formBranchId} className="flex-1 bg-violet-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-violet-500 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-violet-900/20">
-                            <Save size={20} /> {editingId ? 'บันทึกการแก้ไข' : 'บันทึก'}
+                        <button type="submit" disabled={!formBranchId || isSubmitting} className="flex-1 bg-violet-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-violet-500 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-violet-900/20">
+                            <Save size={20} /> {isSubmitting ? 'กำลังบันทึก...' : editingId ? 'บันทึกการแก้ไข' : 'บันทึก'}
                         </button>
                     </div>
                 </form>

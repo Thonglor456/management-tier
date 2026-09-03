@@ -12,6 +12,7 @@ interface SetBalanceModalProps {
     formatCurrency: (num: number) => string;
     currentUser: any;
     selectedBranchId: string;
+    endDate: string;
 }
 
 export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
@@ -20,7 +21,8 @@ export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
     balances,
     formatCurrency,
     currentUser,
-    selectedBranchId
+    selectedBranchId,
+    endDate
 }) => {
     const [selectedAccount, setSelectedAccount] = useState<string>(ACCOUNTS[0].id);
     const [amount, setAmount] = useState<string>('');
@@ -56,7 +58,7 @@ export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
         try {
             await addTransaction({
                 branchId: selectedBranchId,
-                date: new Date().toISOString().split('T')[0],
+                date: endDate,
                 type: 'ADJUSTMENT',
                 name: `ยกยอด/ตั้งต้น (${accountName})`,
                 amount: diff,

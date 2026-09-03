@@ -13,30 +13,18 @@ export const LoginScreen: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const isMasterCode = loginUsername === '9999';
-
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoginError('');
         setIsLoading(true);
 
         try {
-            // Check for Master Access Code
-            if (isMasterCode) {
-                // Map to hidden admin account
-                await signInWithEmailAndPassword(auth, 'admin@tiercoffee.com', 'tier8888');
-            } else {
-                // Normal Email Login
-                const email = loginUsername.includes('@') ? loginUsername : `${loginUsername}@tiercoffee.com`;
-                await signInWithEmailAndPassword(auth, email, loginPassword);
-            }
+            // Normal Email Login (ทั้ง Admin และพนักงาน ล็อกอินด้วยชื่อผู้ใช้/อีเมล + รหัสผ่านจริงเสมอ)
+            const email = loginUsername.includes('@') ? loginUsername : `${loginUsername}@tiercoffee.com`;
+            await signInWithEmailAndPassword(auth, email, loginPassword);
         } catch (error: any) {
-            console.error("Login Error:", error);
-            if (isMasterCode) {
-                setLoginError('เข้าสู่ระบบไม่สำเร็จ: กรุณาตรวจสอบว่ามี User "admin@tiercoffee.com" ใน Firebase และรหัสผ่านถูกต้อง (tier8888)');
-            } else {
-                setLoginError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-            }
+            console.error("Login error:", error);
+            setLoginError(error?.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
         } finally {
             setIsLoading(false);
         }
@@ -70,7 +58,7 @@ export const LoginScreen: React.FC = () => {
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Username or Access Code</label>
+                        <label className="text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Username</label>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <User size={18} className="text-white/30 group-focus-within:text-violet-400 transition-colors duration-300" />
@@ -81,39 +69,31 @@ export const LoginScreen: React.FC = () => {
                                 value={loginUsername}
                                 onChange={(e) => setLoginUsername(e.target.value)}
                                 className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10 transition-all duration-300"
-                                placeholder="Enter username or code"
+                                placeholder="Enter username"
                                 disabled={isLoading}
                             />
                         </div>
                     </div>
 
-                    {!isMasterCode && (
-                        <div className="space-y-1.5">
-                            <div className="flex justify-between items-center ml-1">
-                                <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock size={18} className="text-white/30 group-focus-within:text-violet-400 transition-colors duration-300" />
-                                </div>
-                                <input
-                                    type="password"
-                                    required
-                                    value={loginPassword}
-                                    onChange={(e) => setLoginPassword(e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10 transition-all duration-300"
-                                    placeholder="••••••••"
-                                    disabled={isLoading}
-                                />
-                            </div>
+                    <div className="space-y-1.5">
+                        <div className="flex justify-between items-center ml-1">
+                            <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Password</label>
                         </div>
-                    )}
-                    {isMasterCode && (
-                        <div className="flex items-center gap-3 px-4 py-3.5 bg-violet-500/5 border border-violet-500/20 rounded-2xl">
-                            <Lock size={18} className="text-violet-400/50 shrink-0" />
-                            <span className="text-sm text-violet-300/60 font-medium">Master Access — ไม่ต้องใส่รหัสผ่าน</span>
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Lock size={18} className="text-white/30 group-focus-within:text-violet-400 transition-colors duration-300" />
+                            </div>
+                            <input
+                                type="password"
+                                required
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10 transition-all duration-300"
+                                placeholder="••••••••"
+                                disabled={isLoading}
+                            />
                         </div>
-                    )}
+                    </div>
 
                     {loginError && (
                         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm p-3 rounded-xl flex items-center gap-3 animate-shake">

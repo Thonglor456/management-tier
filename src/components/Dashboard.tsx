@@ -135,9 +135,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {/* New Dashboard Header with Date Picker */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
                 <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <TrendingUp className="text-violet-400" /> {startDate === endDate ? 'ภาพรวมรายวัน' : 'ภาพรวมตามช่วงเวลา'}
-                    </h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <TrendingUp className="text-violet-400" /> {startDate === endDate ? 'ภาพรวมรายวัน' : 'ภาพรวมตามช่วงเวลา'}
+                        </h2>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${selectedBranchId === 'HQ' ? 'bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-violet-500/10 border-violet-500/30 text-violet-400'}`}>
+                            {currentBranch?.name || 'ทุกสาขา'}
+                        </span>
+                    </div>
                     <p className="text-zinc-400 text-xs">
                         {startDate === endDate
                             ? `ข้อมูลประจำวันที่ ${new Date(startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`
@@ -322,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                     acc[t.category] = (acc[t.category] || 0) + t.amount;
                                     return acc;
                                 }, {} as Record<string, number>)
-                            ).map(([cat, amount]) => (
+                            ).sort(([, a], [, b]) => b - a).map(([cat, amount]) => (
                                 <div key={cat} className="flex justify-between items-center text-sm">
                                     <span className="text-zinc-400">{cat}</span>
                                     <span className="text-white font-medium">{formatCurrency(amount)}</span>
@@ -345,7 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                                     acc[t.category] = (acc[t.category] || 0) + t.amount;
                                     return acc;
                                 }, {} as Record<string, number>)
-                            ).map(([cat, amount]) => (
+                            ).sort(([, a], [, b]) => b - a).map(([cat, amount]) => (
                                 <div key={cat} className="flex justify-between items-center text-sm">
                                     <span className="text-zinc-400">{cat}</span>
                                     <span className="text-white font-medium">{formatCurrency(amount)}</span>
@@ -357,7 +362,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {ACCOUNTS.map(acc => {
+                                {ACCOUNTS.map(acc => {
                     const isSystemView = selectedBranchId === 'HQ';
                     const calculatedBalance = balances[acc.id as keyof AccountBalance] || 0;
                     const isEditing = editingAccount === acc.id;
@@ -377,90 +382,121 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     const liveDifference = isEditing ? (parseFloat(actualBalanceInput) || 0) - calculatedBalance : null;
 
                     return (
-                        <Card key={acc.id} className={`p-4 hover:border-violet-500/30 transition-all ${canCompare ? 'relative' : ''} ${isEditing ? 'ring-2 ring-violet-500' : ''}`}>
-                            {canCompare && !isEditing && (
-                                <button
-                                    onClick={() => handleEditBalance(acc.id, actualBalance)}
-                                    className="absolute top-2 right-2 p-1.5 bg-violet-500/20 hover:bg-violet-500/30 rounded-lg text-violet-400 transition-colors z-10"
-                                    title="แก้ไขยอดจริง"
-                                >
-                                    <Edit3 size={14} />
-                                </button>
-                            )}
+                        <Card key={acc.id} className={`p-5 transition-all overflow-hidden relative group ${isEditing ? 'ring-2 ring-violet-500 shadow-2xl' : 'hover:border-zinc-700 shadow-lg'}`}>
+                            {/* Abstract glow effect */}
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-violet-600/5 rounded-full blur-2xl group-hover:bg-violet-600/10 transition-colors pointer-events-none" />
+
+
 
                             {isEditing ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <div className="p-2 bg-violet-500/10 rounded-full text-violet-400 border border-violet-500/20">{acc.icon}</div>
-                                        <span className="font-medium text-zinc-300">{acc.name}</span>
+                                <div className="space-y-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-violet-600 text-white rounded-2xl shadow-lg border border-violet-500">{acc.icon}</div>
+                                        <span className="font-bold text-lg text-white">แก้ไขยอด {acc.name}</span>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-zinc-400 block">ยอดเงินจริง</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="number"
-                                                value={actualBalanceInput}
-                                                onChange={(e) => setActualBalanceInput(e.target.value)}
-                                                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none focus:ring-2 focus:ring-violet-500"
-                                                placeholder="0.00"
-                                                autoFocus
-                                            />
-                                            <button onClick={handleSaveBalance} className="p-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white transition-colors"><Check size={20} /></button>
-                                            <button onClick={handleCancelEdit} className="p-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-zinc-300 transition-colors"><X size={20} /></button>
-                                        </div>
-                                        {liveDifference !== null && (
-                                            <div className={`text-xs p-2 rounded flex justify-between ${liveDifference === 0 ? 'bg-zinc-800 text-zinc-400' : liveDifference > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                                                <span>เปรียบเทียบ:</span>
-                                                <span className="font-bold">
-                                                    {liveDifference > 0 ? '+' : ''}{formatCurrency(liveDifference)}
-                                                </span>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-end border-b border-zinc-800/50 pb-2 mb-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none mb-1">ยอดในระบบ</p>
+                                                <p className="text-sm font-bold text-zinc-300">{formatCurrency(calculatedBalance)}</p>
                                             </div>
-                                        )}
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none mb-1">ผลต่าง</p>
+                                                <p className={`text-sm font-bold ${liveDifference === null || liveDifference === 0 ? 'text-zinc-500' : liveDifference > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                    {liveDifference !== null && liveDifference > 0 ? '+' : ''}{formatCurrency(liveDifference ?? 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-violet-400 uppercase tracking-widest block">เงินที่มีอยู่จริง (ACTUAL)</label>
+                                            <div className="space-y-2">
+                                                <input
+                                                    type="number"
+                                                    value={actualBalanceInput}
+                                                    onChange={(e) => setActualBalanceInput(e.target.value)}
+                                                    className="w-full bg-zinc-950/50 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-xl font-black outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all placeholder:text-zinc-800"
+                                                    placeholder="0.00"
+                                                    autoFocus
+                                                />
+                                                <div className="flex gap-2">
+                                                    <button onClick={handleSaveBalance} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold transition-all shadow-lg border border-emerald-500/50 flex items-center justify-center gap-2">
+                                                        <Check size={20} /> บันทึกยอด
+                                                    </button>
+                                                    <button onClick={handleCancelEdit} className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-400 transition-all border border-zinc-700 flex items-center justify-center">
+                                                        <X size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ) : canCompare ? (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="p-2 bg-violet-500/10 rounded-full text-violet-400 border border-violet-500/20">{acc.icon}</div>
-                                        <span className="font-medium text-zinc-300">{acc.name}</span>
+                                <div className="space-y-4 relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-zinc-800 text-violet-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
+                                        <span className="font-bold text-sm text-zinc-400 uppercase tracking-wider">{acc.name}</span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-3">
+
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">เงินที่มีอยู่จริง (Actual)</p>
+                                        <p className={`text-3xl font-black tracking-tight ${actualBalance === undefined ? 'text-zinc-800 italic text-xl' : (actualBalance || 0) < 0 ? 'text-rose-400' : 'text-white'}`}>
+                                            {actualBalance !== undefined ? formatCurrency(actualBalance).replace('-', '') : 'ยังไม่ระบุ'}
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-3 border-t border-zinc-800/50 flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-zinc-500 mb-1">ยอดคำนวณ</p>
-                                            <p className={`text-lg font-bold ${calculatedBalance < 0 ? 'text-rose-400' : 'text-white'}`}>
-                                                {formatCurrency(calculatedBalance)}
-                                            </p>
+                                            <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5">ยอดในระบบ</p>
+                                            <p className="text-sm font-mono font-bold text-zinc-400">{formatCurrency(calculatedBalance).replace('-', '')}</p>
                                         </div>
-                                        {actualBalance !== undefined && (
-                                            <div>
-                                                <p className="text-xs text-zinc-500 mb-1">ยอดจริง</p>
-                                                <p className={`text-lg font-bold ${actualBalance < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                                    {formatCurrency(actualBalance)}
-                                                </p>
+
+                                        {difference !== null && (
+                                            <div className="text-right">
+                                                {difference === 0 ? (
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+                                                        <Check size={12} strokeWidth={3} />
+                                                        <span className="text-[10px] font-black uppercase">ยอดตรงกัน</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className={`px-2.5 py-1 rounded-full border flex flex-col items-end ${difference > 0 ? 'bg-emerald-500/5 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]' : 'bg-rose-500/5 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.05)]'}`}>
+                                                        <span className="text-[8px] font-black uppercase tracking-tighter opacity-70 leading-none mb-0.5">{difference > 0 ? 'เงินเกิน' : 'เงินขาด'}</span>
+                                                        <span className="text-xs font-black font-mono leading-none">{formatCurrency(Math.abs(difference))}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
-                                    {difference !== null && difference !== 0 && (
-                                        <div className={`mt-2 flex items-center justify-between text-sm p-2 rounded-lg ${difference > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium">ส่วนต่าง:</span>
-                                                <span className="font-bold">{formatCurrency(Math.abs(difference))}</span>
-                                            </div>
-                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-black/30">
-                                                {difference > 0 ? 'เกิน' : 'ขาด'}
-                                            </span>
-                                        </div>
-                                    )}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-3 relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-violet-500/10 rounded-full text-violet-400 border border-violet-500/20 transition-colors">{acc.icon}</div>
-                                        <span className="font-medium text-zinc-300">{acc.name}</span>
+                                        <div className="p-2.5 bg-zinc-800 text-violet-400 rounded-2xl border border-zinc-700/50 shadow-inner">{acc.icon}</div>
+                                        <span className="font-bold text-sm text-zinc-400 uppercase tracking-wider">{acc.name}</span>
                                     </div>
-                                    <span className={`font-bold ${calculatedBalance < 0 ? 'text-rose-400' : 'text-white'}`}>
-                                        {formatCurrency(calculatedBalance)}
-                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">ยอดรวมระบบ (ทุกสาขา)</p>
+                                        <p className={`text-2xl font-black tracking-tight ${calculatedBalance < 0 ? 'text-rose-400' : 'text-white'}`}>
+                                            {formatCurrency(calculatedBalance).replace('-', '')}
+                                        </p>
+                                        <p className="text-[9px] text-zinc-600 mt-2 uppercase tracking-tighter">เลือกรายสาขาเพื่อเปรียบเทียบยอดจริง</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {canCompare && !isEditing && (
+                                <div className="flex justify-end mt-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleEditBalance(acc.id, actualBalance);
+                                        }}
+                                        className="p-3 bg-violet-600 text-white rounded-xl shadow-lg border border-violet-500 hover:bg-violet-500 hover:scale-110 active:scale-95 transition-all"
+                                        aria-label="แก้ไขยอด"
+                                    >
+                                        <Edit3 size={18} />
+                                    </button>
                                 </div>
                             )}
                         </Card>

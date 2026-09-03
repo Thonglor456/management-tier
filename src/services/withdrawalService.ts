@@ -41,6 +41,8 @@ export const subscribeToWithdrawals = (
         // Sort by date descending
         data.sort((a, b) => b.date.localeCompare(a.date));
         callback(data);
+    }, (error) => {
+        console.error("Error subscribing to withdrawals:", error);
     });
 };
 

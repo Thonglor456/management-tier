@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "/usr/local/bin/firebase deploy --only hosting --non-interactive",
+    "get-sheet": "node /Users/thonglorr/.gemini/antigravity-ide/scratch/get_sheet.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

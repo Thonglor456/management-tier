@@ -45,6 +45,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingShiftId, setEditingShiftId] = useState<string | null>(null);
+    const [isSavingShift, setIsSavingShift] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState<{show: boolean, staff?: Staff}>({show: false});
     const [showHistoryModal, setShowHistoryModal] = useState<{show: boolean, staff?: Staff}>({show: false});
     const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
@@ -109,6 +110,8 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
 
     const handleAddShift = async () => {
         if (!staffName.trim() || !wage) return;
+        if (isSavingShift) return; // ป้องกันการกดบันทึกซ้ำซ้อน
+        setIsSavingShift(true);
 
         const dateStr = formatDateForStorage(selectedDate);
 
@@ -158,6 +161,8 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
         } catch (error) {
             console.error("Error saving shift:", error);
             alert("บันทึกไม่สำเร็จ");
+        } finally {
+            setIsSavingShift(false);
         }
     };
 
@@ -906,9 +911,10 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             
                             <button
                                 onClick={handleAddShift}
-                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-violet-900/40 active:scale-95"
+                                disabled={isSavingShift}
+                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-violet-900/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                บันทึกข้อมูล
+                                {isSavingShift ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                             </button>
                         </div>
                     </div>

@@ -14,6 +14,7 @@ import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import X from 'lucide-react/dist/esm/icons/x';
 import type { Transaction, Branch, User } from '../types';
 import { ImportModal } from './ImportModal';
+import { getLocalDateString } from '../constants';
 
 interface TransactionListProps {
     groupedTransactions: { date: string, items: Transaction[] }[];
@@ -27,8 +28,8 @@ interface TransactionListProps {
     onDelete: (id: string) => void;
     // Import props
     allTransactions?: Transaction[];
-    onImportTransactions?: (transactions: Omit<Transaction, 'id'>[], datesToOverwrite: string[]) => Promise<void>;
-    onBulkCleanup?: (year: number) => Promise<void>;
+    onImportTransactions?: (targetBranchId: string, transactions: Omit<Transaction, 'id'>[], datesToOverwrite: string[]) => Promise<void>;
+    onBulkCleanup?: (targetBranchId: string, year: number, month?: number) => Promise<void>;
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({
@@ -49,7 +50,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     const canEdit = (t: Transaction) =>
         currentUser.role === 'ADMIN' || t.createdBy === currentUser.username;
     const [showFilterMenu, setShowFilterMenu] = useState(false);
-    const [filterType, setFilterType] = useState<Transaction['type'] | 'ALL'>('ALL');
+    const [filterType, setFilterType] = useState<Transaction['type'] | 'ALL' | 'EXPENSE_CASH' | 'EXPENSE_BANK'>('ALL');
     
     // Date Filtering State
     const [startDateFilter, setStartDateFilter] = useState<string>('');
@@ -58,7 +59,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
     // Helpers for Date Filtering
     const setToday = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
         setStartDateFilter(today);
         setEndDateFilter(today);
         setShowDateMenu(false);
@@ -67,7 +68,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     const setYesterday = () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = yesterday.toISOString().split('T')[0];
+        const yStr = getLocalDateString(yesterday);
         setStartDateFilter(yStr);
         setEndDateFilter(yStr);
         setShowDateMenu(false);
@@ -76,17 +77,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     const setThisWeek = () => {
         const now = new Date();
         const first = now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1); // Monday
-        const monday = new Date(now.setDate(first)).toISOString().split('T')[0];
+        const monday = getLocalDateString(new Date(now.setDate(first)));
         setStartDateFilter(monday);
-        setEndDateFilter(new Date().toISOString().split('T')[0]);
+        setEndDateFilter(getLocalDateString());
         setShowDateMenu(false);
     };
 
     const setThisMonth = () => {
         const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const firstDay = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
         setStartDateFilter(firstDay);
-        setEndDateFilter(new Date().toISOString().split('T')[0]);
+        setEndDateFilter(getLocalDateString());
         setShowDateMenu(false);
     };
 
@@ -99,7 +100,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     // Filter Logic
     const filteredGroupedTransactions = groupedTransactions.map(group => {
         const filteredItems = group.items.filter(t => {
-            const matchesType = filterType === 'ALL' || t.type === filterType;
+            let matchesType = false;
+            if (filterType === 'ALL') {
+                matchesType = true;
+            } else if (filterType === 'EXPENSE_CASH') {
+                matchesType = t.type === 'EXPENSE' && t.paymentMethod === 'cash';
+            } else if (filterType === 'EXPENSE_BANK') {
+                matchesType = t.type === 'EXPENSE' && t.paymentMethod === 'bank';
+            } else {
+                matchesType = t.type === filterType;
+            }
+
             const matchesDate = (!startDateFilter || t.date >= startDateFilter) && 
                                 (!endDateFilter || t.date <= endDateFilter);
             return matchesType && matchesDate;
@@ -147,7 +158,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `transactions_${getLocalDateString()}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -173,8 +184,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         {filterType === 'ALL' ? 'ตัวกรอง' :
                             filterType === 'INCOME' ? 'รายรับ' :
                                 filterType === 'EXPENSE' ? 'รายจ่าย' :
-                                    filterType === 'TRANSFER' ? 'โอนย้าย' :
-                                        filterType === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
+                                    filterType === 'EXPENSE_CASH' ? 'รายจ่าย - เงินสด' :
+                                        filterType === 'EXPENSE_BANK' ? 'รายจ่าย - โอน' :
+                                            filterType === 'TRANSFER' ? 'โอนย้าย' :
+                                                filterType === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
                     </button>
 
                     {/* Date Filter */}
@@ -247,6 +260,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                             <button onClick={() => { setFilterType('ALL'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'ALL' ? 'text-violet-400 bg-violet-500/10' : 'text-zinc-300'}`}>ทั้งหมด</button>
                             <button onClick={() => { setFilterType('INCOME'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'INCOME' ? 'text-emerald-400 bg-emerald-500/10' : 'text-zinc-300'}`}>รายรับ</button>
                             <button onClick={() => { setFilterType('EXPENSE'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'EXPENSE' ? 'text-rose-400 bg-rose-500/10' : 'text-zinc-300'}`}>รายจ่าย</button>
+                            <button onClick={() => { setFilterType('EXPENSE_CASH'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'EXPENSE_CASH' ? 'text-rose-400 bg-rose-500/10' : 'text-zinc-300'}`}>รายจ่าย - เงินสด</button>
+                            <button onClick={() => { setFilterType('EXPENSE_BANK'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'EXPENSE_BANK' ? 'text-rose-400 bg-rose-500/10' : 'text-zinc-300'}`}>รายจ่าย - โอน</button>
                             <button onClick={() => { setFilterType('DIVIDEND'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'DIVIDEND' ? 'text-purple-400 bg-purple-500/10' : 'text-zinc-300'}`}>ปันผล</button>
                             <button onClick={() => { setFilterType('TRANSFER'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'TRANSFER' ? 'text-blue-400 bg-blue-500/10' : 'text-zinc-300'}`}>โอนย้าย</button>
                             <button onClick={() => { setFilterType('ADJUSTMENT'); setShowFilterMenu(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-zinc-800 ${filterType === 'ADJUSTMENT' ? 'text-zinc-400 bg-zinc-500/10' : 'text-zinc-300'}`}>ปรับยอด</button>
@@ -265,7 +280,20 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </div>
             ) : (
                 filteredGroupedTransactions.map(group => {
-                    const filteredItems = group.items;
+                    const sortOrder = (t: Transaction) => {
+                        const pm = t.paymentMethod?.toLowerCase();
+                        if (t.type === 'INCOME') {
+                            if (pm === 'bank') return 1;
+                            if (pm === 'cash') return 2;
+                            if (pm === 'delivery') return 3;
+                            if (pm === 'thaichuaithai') return 4;
+                            return 5;
+                        }
+                        if (t.type === 'EXPENSE') return 6;
+                        return 7;
+                    };
+
+                    const filteredItems = [...group.items].sort((a, b) => sortOrder(a) - sortOrder(b));
 
                     if (filteredItems.length === 0) return null;
 
@@ -296,7 +324,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                             </div>
                                             <div>
                                                 <div className="font-medium text-zinc-200 text-sm">
-                                                    {t.name || t.note || t.category}
+                                                    {t.name || t.category}
                                                 </div>
                                                 <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-2 mt-1">
                                                     {selectedBranchId === 'HQ' && <span className="text-violet-300 bg-violet-900/20 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border border-violet-500/20">{branches.find(b => b.id === t.branchId)?.name.split(' ')[1]}</span>}
@@ -305,8 +333,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                     <span className="flex items-center gap-1 bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
                                                         {t.paymentMethod === 'cash' ? <TrendingUp size={10} className="text-emerald-400" /> : 
                                                          t.paymentMethod === 'bank' ? <ArrowRightLeft size={10} className="text-blue-400" /> : 
+                                                         t.paymentMethod === 'thaiChuaiThai' ? <TrendingUp size={10} className="text-blue-500" /> :
                                                          <TrendingUp size={10} className="text-orange-400" />}
-                                                        {t.paymentMethod === 'cash' ? 'เงินสด' : t.paymentMethod === 'bank' ? 'ธนาคาร' : 'Delivery'}
+                                                        {t.paymentMethod === 'cash' ? 'เงินสด' : 
+                                                         t.paymentMethod === 'bank' ? 'ธนาคาร' : 
+                                                         t.paymentMethod === 'thaiChuaiThai' ? 'ไทยช่วยไทย' : 
+                                                         'Delivery'}
                                                     </span>
 
                                                     {/* 2. Type Badge */}
@@ -319,10 +351,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                         {t.type === 'INCOME' ? 'รายรับ' : t.type === 'EXPENSE' ? 'รายจ่าย' : t.type === 'TRANSFER' ? 'โอนย้าย' : t.type === 'DIVIDEND' ? 'ปันผล' : 'ปรับยอด'}
                                                     </span>
 
-                                                    {/* 3. Category Badge */}
-                                                    <span className="bg-zinc-800/50 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">
-                                                        {t.category}
-                                                    </span>
+                                                    {/* note is hidden as requested: ล้าง field นี้ให้ว่างเสมอ */}
                                                 </div>
                                             </div>
                                         </div>
@@ -340,7 +369,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                                                 {canEdit(t) && (
                                                     <>
                                                         <button onClick={() => onEdit(t)} className="text-zinc-600 hover:text-violet-400 p-1"><Edit2 size={14} /></button>
-                                                        <button onClick={() => onDelete(t.id)} className="text-zinc-600 hover:text-rose-400 p-1"><Trash2 size={14} /></button>
+                                                        <button onClick={(e) => { e.stopPropagation(); onDelete(t.id); }} className="text-zinc-600 hover:text-rose-400 p-1"><Trash2 size={14} /></button>
                                                     </>
                                                 )}
                                             </div>
@@ -358,8 +387,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     show={showImportModal}
                     onClose={() => setShowImportModal(false)}
                     selectedBranchId={selectedBranchId}
+                    currentBranchName={currentBranchName}
+                    branches={branches}
                     existingTransactions={allTransactions}
                     currentUser={currentUser.username}
+                    isAdmin={currentUser.role === 'ADMIN'}
                     onImport={onImportTransactions}
                     onBulkCleanup={onBulkCleanup}
                 />

@@ -26,23 +26,31 @@ export const subscribeToBranches = (onUpdate: (branches: Branch[]) => void) => {
             ...doc.data()
         })) as Branch[];
         onUpdate(branches);
+    }, (error) => {
+        console.error("Error subscribing to branches:", error);
     });
 };
 
-export const addBranch = async (name: string) => {
+export const addBranch = async (name: string, googleSheetsUrl?: string, googleSheetsTabs?: string) => {
     const colors = ['bg-pink-600', 'bg-orange-600', 'bg-cyan-600', 'bg-lime-600'];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
     await addDoc(collection(db, 'branches'), {
         name,
-        color: randomColor
+        color: randomColor,
+        ...(googleSheetsUrl && { googleSheetsUrl }),
+        ...(googleSheetsTabs && { googleSheetsTabs })
     });
 };
 
-export const updateBranch = async (id: string, name: string) => {
+export const updateBranch = async (id: string, name: string, googleSheetsUrl?: string, googleSheetsTabs?: string) => {
     // Prevent updating virtual ID 'HQ' if it ever gets passed, though it shouldn't be in DB.
     if (id === 'HQ') return;
-    await updateDoc(doc(db, 'branches', id), { name });
+    await updateDoc(doc(db, 'branches', id), { 
+        name,
+        googleSheetsUrl: googleSheetsUrl || '',
+        googleSheetsTabs: googleSheetsTabs || ''
+    });
 };
 
 export const updateBranchBalance = async (id: string, updates: { actualBankBalance?: number, actualCashBalance?: number }) => {
@@ -81,6 +89,8 @@ export const subscribeToTransactions = (branchId: string, onUpdate: (transaction
             ...doc.data()
         })) as Transaction[];
         onUpdate(transactions);
+    }, (error) => {
+        console.error("Error subscribing to transactions:", error);
     });
 };
 
@@ -121,6 +131,8 @@ export const subscribeToUsers = (onUpdate: (users: any[]) => void) => {
             ...doc.data()
         }));
         onUpdate(users);
+    }, (error) => {
+        console.error("Error subscribing to users:", error);
     });
 };
 

@@ -46,6 +46,8 @@ export const subscribeToShifts = (
         shifts.sort((a, b) => a.date.localeCompare(b.date));
 
         callback(shifts);
+    }, (error) => {
+        console.error("Error subscribing to shifts:", error);
     });
 };
 

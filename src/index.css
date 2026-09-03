@@ -1,11 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  --color-terracotta-200: #e3b596;
+  --color-terracotta-300: #d89b73;
+  --color-terracotta-400: #d68a52;
+  --color-terracotta-500: #c67240;
+  --color-terracotta-600: #b5602f;
+  --color-terracotta-700: #954e27;
+  --color-terracotta-800: #753d1f;
+  --color-terracotta-900: #452414;
+}
+
 @layer base {
   html, body, #root {
     width: 100%;
     min-height: 100vh;
   }
   body {
-    @apply bg-black text-zinc-100 selection:bg-violet-900/50 selection:text-white;
+    @apply bg-black text-zinc-100 selection:bg-terracotta-900/50 selection:text-white;
   }
 }

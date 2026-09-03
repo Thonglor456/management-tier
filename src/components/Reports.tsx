@@ -109,8 +109,8 @@ export const Reports: React.FC<ReportsProps> = ({
             {/* Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/50">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-violet-500/10 rounded-lg border border-violet-500/20 shadow-inner">
-                        <PieChart size={20} className="text-violet-400" />
+                    <div className="p-2 bg-terracotta-500/10 rounded-lg border border-terracotta-500/20 shadow-inner">
+                        <PieChart size={20} className="text-terracotta-400" />
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-slate-200 leading-tight">
@@ -138,7 +138,7 @@ export const Reports: React.FC<ReportsProps> = ({
                                 const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
                                 onRangeChange(start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
                             }}
-                            className="px-3 py-1 text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors"
+                            className="px-3 py-1 text-xs font-bold text-terracotta-400 hover:text-terracotta-300 transition-colors"
                         >
                             เดือนนี้
                         </button>
@@ -172,7 +172,7 @@ export const Reports: React.FC<ReportsProps> = ({
 
             {/* Net Profit Summary Card */}
             <Card className="p-8 border border-slate-800 relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950">
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-terracotta-600/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div className="text-center relative z-10">
                     <h4 className="text-slate-400 text-sm uppercase tracking-wider font-semibold mb-2">
                         กำไรสุทธิ (Net Profit)

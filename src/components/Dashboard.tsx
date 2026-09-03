@@ -126,6 +126,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
         setActualBalanceInput('');
     };
 
+    // Category breakdown, sorted highest amount first, with each item's share of its own total
+    const buildBreakdown = (type: 'INCOME' | 'EXPENSE') => {
+        const grouped = dailyTransactions
+            .filter(t => t.type === type)
+            .reduce((acc, t) => {
+                acc[t.category] = (acc[t.category] || 0) + t.amount;
+                return acc;
+            }, {} as Record<string, number>);
+        const entries = Object.entries(grouped).sort(([, a], [, b]) => b - a);
+        const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+        return entries.map(([category, amount]) => ({
+            category,
+            amount,
+            pct: total > 0 ? (amount / total) * 100 : 0,
+        }));
+    };
+    const incomeBreakdown = buildBreakdown('INCOME');
+    const expenseBreakdown = buildBreakdown('EXPENSE');
+
     return (
         <div
             className="space-y-6 animate-fade-in"
@@ -314,50 +333,74 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Day Category Breakdown Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4 bg-zinc-900/40 border-zinc-800">
-                    <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                        <TrendingUp size={16} /> รายละเอียดรายรับ ({startDate === endDate ? 'รายวัน' : 'ช่วงเวลา'})
-                    </h4>
-                    <div className="space-y-4">
-                        {dailyTransactions.filter(t => t.type === 'INCOME').length === 0 ? (
-                            <p className="text-zinc-500 text-xs italic py-2">ไม่มีข้อมูลรายรับ</p>
-                        ) : (
-                            Object.entries(
-                                dailyTransactions.filter(t => t.type === 'INCOME').reduce((acc, t) => {
-                                    acc[t.category] = (acc[t.category] || 0) + t.amount;
-                                    return acc;
-                                }, {} as Record<string, number>)
-                            ).sort(([, a], [, b]) => b - a).map(([cat, amount]) => (
-                                <div key={cat} className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-400">{cat}</span>
-                                    <span className="text-white font-medium">{formatCurrency(amount)}</span>
-                                </div>
-                            ))
-                        )}
+                <Card className="p-5 bg-zinc-900/40 border-zinc-800">
+                    <div className="flex items-center justify-between mb-5">
+                        <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                            <div className="p-1.5 bg-emerald-400/10 rounded-lg border border-emerald-400/20">
+                                <TrendingUp size={14} />
+                            </div>
+                            รายละเอียดรายรับ ({startDate === endDate ? 'รายวัน' : 'ช่วงเวลา'})
+                        </h4>
+                        <span className="text-xs text-zinc-500 font-medium">{incomeBreakdown.length} รายการ</span>
                     </div>
+                    {incomeBreakdown.length === 0 ? (
+                        <p className="text-zinc-500 text-xs italic py-2">ไม่มีข้อมูลรายรับ</p>
+                    ) : (
+                        <div className="space-y-4">
+                            {incomeBreakdown.map(({ category, amount, pct }) => (
+                                <div key={category} className="group">
+                                    <div className="flex justify-between items-baseline gap-3 mb-1.5">
+                                        <span className="text-zinc-300 text-sm font-medium truncate">{category}</span>
+                                        <div className="flex items-baseline gap-2 flex-shrink-0">
+                                            <span className="text-white text-sm font-bold tabular-nums">{formatCurrency(amount)}</span>
+                                            <span className="text-emerald-400/70 text-[11px] font-medium tabular-nums w-9 text-right">{pct.toFixed(0)}%</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500 group-hover:brightness-125"
+                                            style={{ width: `${Math.max(pct, 2)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </Card>
 
-                <Card className="p-4 bg-zinc-900/40 border-zinc-800">
-                    <h4 className="text-sm font-bold text-rose-400 mb-4 flex items-center gap-2">
-                        <TrendingDown size={16} /> รายละเอียดรายจ่าย ({startDate === endDate ? 'รายวัน' : 'ช่วงเวลา'})
-                    </h4>
-                    <div className="space-y-4">
-                        {dailyTransactions.filter(t => t.type === 'EXPENSE').length === 0 ? (
-                            <p className="text-zinc-500 text-xs italic py-2">ไม่มีข้อมูลรายจ่าย</p>
-                        ) : (
-                            Object.entries(
-                                dailyTransactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => {
-                                    acc[t.category] = (acc[t.category] || 0) + t.amount;
-                                    return acc;
-                                }, {} as Record<string, number>)
-                            ).sort(([, a], [, b]) => b - a).map(([cat, amount]) => (
-                                <div key={cat} className="flex justify-between items-center text-sm">
-                                    <span className="text-zinc-400">{cat}</span>
-                                    <span className="text-white font-medium">{formatCurrency(amount)}</span>
-                                </div>
-                            ))
-                        )}
+                <Card className="p-5 bg-zinc-900/40 border-zinc-800">
+                    <div className="flex items-center justify-between mb-5">
+                        <h4 className="text-sm font-bold text-rose-400 flex items-center gap-2">
+                            <div className="p-1.5 bg-rose-400/10 rounded-lg border border-rose-400/20">
+                                <TrendingDown size={14} />
+                            </div>
+                            รายละเอียดรายจ่าย ({startDate === endDate ? 'รายวัน' : 'ช่วงเวลา'})
+                        </h4>
+                        <span className="text-xs text-zinc-500 font-medium">{expenseBreakdown.length} รายการ</span>
                     </div>
+                    {expenseBreakdown.length === 0 ? (
+                        <p className="text-zinc-500 text-xs italic py-2">ไม่มีข้อมูลรายจ่าย</p>
+                    ) : (
+                        <div className="space-y-4">
+                            {expenseBreakdown.map(({ category, amount, pct }) => (
+                                <div key={category} className="group">
+                                    <div className="flex justify-between items-baseline gap-3 mb-1.5">
+                                        <span className="text-zinc-300 text-sm font-medium truncate">{category}</span>
+                                        <div className="flex items-baseline gap-2 flex-shrink-0">
+                                            <span className="text-white text-sm font-bold tabular-nums">{formatCurrency(amount)}</span>
+                                            <span className="text-rose-400/70 text-[11px] font-medium tabular-nums w-9 text-right">{pct.toFixed(0)}%</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all duration-500 group-hover:brightness-125"
+                                            style={{ width: `${Math.max(pct, 2)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </Card>
             </div>
 

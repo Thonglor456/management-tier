@@ -99,7 +99,7 @@ export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
                                     key={acc.id}
                                     onClick={() => setSelectedAccount(acc.id)}
                                     className={`flex items-center justify-between p-3 rounded-xl border transition-all ${selectedAccount === acc.id
-                                        ? 'bg-violet-600/20 border-violet-500 text-white'
+                                        ? 'bg-amber-600/20 border-amber-500 text-white'
                                         : 'bg-black/20 border-zinc-700 text-zinc-400 hover:bg-zinc-800'
                                         }`}
                                 >
@@ -122,7 +122,7 @@ export const SetBalanceModal: React.FC<SetBalanceModalProps> = ({
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="เช่น 10000"
-                            className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-2xl font-bold text-white outline-none focus:ring-2 focus:ring-violet-500 text-center placeholder-zinc-800"
+                            className="w-full bg-black border border-zinc-700 rounded-xl px-4 py-3 text-2xl font-bold text-white outline-none focus:ring-2 focus:ring-amber-500 text-center placeholder-zinc-800"
                             autoFocus
                         />
                         <p className="text-xs text-zinc-500 mt-2 text-center">

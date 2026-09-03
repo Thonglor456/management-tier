@@ -268,9 +268,9 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                     key={day}
                     onClick={() => setSelectedDate(new Date(year, month, day))}
                     className={`h-10 sm:h-14 rounded-lg flex flex-col items-center justify-center relative transition-all border ${isSelected
-                        ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-900/40'
+                        ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-900/40'
                         : 'bg-zinc-800/50 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                        } ${isToday ? 'ring-2 ring-violet-400 ring-offset-2 ring-offset-zinc-950' : ''}`}
+                        } ${isToday ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-zinc-950' : ''}`}
                 >
                     <span className={`text-sm ${isSelected ? 'font-bold' : ''}`}>{day}</span>
                     <div className="flex gap-0.5 mt-1">
@@ -322,7 +322,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
             <div className="flex justify-between items-center bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
                 <div>
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <CalendarIcon className="text-violet-400" /> ตารางงาน
+                        <CalendarIcon className="text-amber-400" /> ตารางงาน
                     </h2>
                     <p className="text-zinc-500 text-xs mt-1">{currentBranchName}</p>
                 </div>
@@ -379,7 +379,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                     {/* Monthly Summary Section */}
                     <div className="pt-4 border-t border-zinc-800/50">
                         <div className="flex items-center gap-2 mb-4 px-1">
-                            <TrendingUp className="text-violet-400" size={20} />
+                            <TrendingUp className="text-amber-400" size={20} />
                             <h3 className="text-lg font-bold text-white">สรุปประจำเดือน {currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</h3>
                         </div>
 
@@ -394,7 +394,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             </Card>
                             <Card className="p-4 bg-zinc-900/40 border-zinc-800/50">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-violet-500/10 rounded-lg text-violet-400"><Banknote size={18} /></div>
+                                    <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400"><Banknote size={18} /></div>
                                     <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider">รายได้รวมทีม</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">฿{teamOverview.totalIncome.toLocaleString()}</div>
@@ -424,7 +424,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     <Card key={staff.id} className="p-5 bg-zinc-900/60 border-zinc-800 transition-all hover:bg-zinc-800/40">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-full bg-violet-500/20 flex items-center justify-center text-xl font-bold text-violet-400">
+                                                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-xl font-bold text-amber-400">
                                                     {staff.name.charAt(0)}
                                                 </div>
                                                 <div>
@@ -493,7 +493,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             </h3>
                             <button
                                 onClick={() => setShowAddModal(true)}
-                                className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-violet-900/20"
+                                className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-amber-900/20"
                             >
                                 <Plus size={18} /> เพิ่มคนเข้างาน
                             </button>
@@ -512,7 +512,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                             <div className="relative">
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold
                                                     ${shift.role === 'Barista' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                        shift.role === 'Cashier' ? 'bg-amber-500/20 text-amber-400' :
+                                                        shift.role === 'Cashier' ? 'bg-cyan-500/20 text-cyan-400' :
                                                             shift.role === 'Manager' ? 'bg-rose-500/20 text-rose-400' :
                                                                 'bg-blue-500/20 text-blue-400'}
                                                 `}>
@@ -530,12 +530,12 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                 <div className="flex items-center gap-2">
                                                     <h4 className="font-bold text-white text-base">{shift.staffName}</h4>
                                                     <span className="text-zinc-500 text-sm">—</span>
-                                                    <span className="text-violet-400 font-bold text-sm">฿{shift.wage.toLocaleString()}/วัน</span>
+                                                    <span className="text-amber-400 font-bold text-sm">฿{shift.wage.toLocaleString()}/วัน</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
                                                     <span className={`px-2 py-0.5 rounded text-[10px] border
                                                         ${shift.role === 'Barista' ? 'border-emerald-500/30 text-emerald-400' :
-                                                            shift.role === 'Cashier' ? 'border-amber-500/30 text-amber-400' :
+                                                            shift.role === 'Cashier' ? 'border-cyan-500/30 text-cyan-400' :
                                                                 shift.role === 'Manager' ? 'border-rose-500/30 text-rose-400' :
                                                                     'border-blue-500/30 text-blue-400'}
                                                     `}>{shift.role}</span>
@@ -586,7 +586,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                         // For now, let's keep it simple as deleting and re-adding, or I can implement updateShift logic.
                                                         setShowAddModal(true);
                                                     }}
-                                                    className="p-2 text-zinc-500 hover:text-violet-400 transition-colors"
+                                                    className="p-2 text-zinc-500 hover:text-amber-400 transition-colors"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
@@ -605,7 +605,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                 {shiftsOnSelectedDate.some(s => s.status === 'PRESENT') && (
                                     <div className="mt-6 p-5 bg-zinc-900/50 rounded-2xl border border-zinc-800 space-y-3">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <LayoutList size={16} className="text-violet-400" />
+                                            <LayoutList size={16} className="text-amber-400" />
                                             <h4 className="text-sm font-bold text-white uppercase tracking-wider">สรุปท้ายวัน</h4>
                                         </div>
                                         
@@ -672,7 +672,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             <button
                                 type="button"
                                 onClick={() => setShowAddModal(true)}
-                                className="bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors"
+                                className="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors"
                             >
                                 <Plus size={14} /> เพิ่ม
                             </button>
@@ -760,7 +760,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                                                 setNote(shift.note || '');
                                                                 setShowAddModal(true);
                                                             }}
-                                                            className="p-1.5 text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                                                            className="p-1.5 text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
                                                         >
                                                             <Edit2 size={16} />
                                                         </button>
@@ -799,7 +799,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     <select
                                         value={selectedStaffId}
                                         onChange={e => setSelectedStaffId(e.target.value)}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none appearance-none"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
                                     >
                                         <option value="">-- เลือกพนักงาน --</option>
                                         {staffList.map(s => (
@@ -818,7 +818,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                         value={staffName}
                                         onChange={e => setStaffName(e.target.value)}
                                         placeholder="เช่น สมชาย, มานี"
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
                                     />
                                 </div>
                             )}
@@ -831,7 +831,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                         value={wage}
                                         onChange={e => setWage(e.target.value)}
                                         placeholder="300"
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none font-bold text-emerald-400"
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none font-bold text-emerald-400"
                                     />
                                 </div>
                                 <div>
@@ -883,7 +883,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                                     value={note}
                                     onChange={e => setNote(e.target.value)}
                                     placeholder="เช่น มาแทน, กลับก่อน"
-                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                             
@@ -912,7 +912,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                             <button
                                 onClick={handleAddShift}
                                 disabled={isSavingShift}
-                                className="w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-violet-900/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl mt-4 transition-all shadow-lg shadow-amber-900/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSavingShift ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
                             </button>
@@ -967,7 +967,7 @@ export const Schedule: React.FC<ScheduleProps> = ({ selectedBranchId, currentUse
                 <div className="fixed inset-0 bg-black/80 z-[55] flex items-center justify-center p-4">
                     <div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden h-[500px] flex flex-col">
                         <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-                            <h3 className="font-bold text-white flex items-center gap-2"><History size={18} className="text-violet-400" /> ประวัติการเบิก: {showHistoryModal.staff.name}</h3>
+                            <h3 className="font-bold text-white flex items-center gap-2"><History size={18} className="text-amber-400" /> ประวัติการเบิก: {showHistoryModal.staff.name}</h3>
                             <button onClick={() => setShowHistoryModal({show: false})} className="text-zinc-400 hover:text-white"><X size={20} /></button>
                         </div>
                         <div className="flex-1 p-4 overflow-y-auto space-y-3">

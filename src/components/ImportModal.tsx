@@ -276,7 +276,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                                         className="w-full text-left p-4 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-xl transition-all group flex justify-between items-center"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:text-violet-400 transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover:text-amber-400 transition-colors">
                                                 <Store size={20} />
                                             </div>
                                             <div>
@@ -296,7 +296,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                         <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-4 mb-4">
                             <div className="flex justify-between items-center mb-3">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center text-violet-400">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-600/20 flex items-center justify-center text-amber-400">
                                         <LinkIcon size={16} />
                                     </div>
                                     <div>
@@ -332,7 +332,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                                                 autoFocus
                                                 value={tempUrlInput}
                                                 onChange={(e) => setTempUrlInput(e.target.value)}
-                                                className="flex-1 bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-violet-500 transition-all"
+                                                className="flex-1 bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-500 transition-all"
                                                 placeholder="วาง Google Sheets URL ที่นี่..."
                                             />
                                             <button 
@@ -364,7 +364,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                                     </div>
                                     <button 
                                         onClick={() => loadData(localBranchId)}
-                                        className="text-[10px] bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap"
+                                        className="text-[10px] bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-md font-bold transition-all whitespace-nowrap"
                                     >
                                         ดึงข้อมูลใหม่
                                     </button>
@@ -376,7 +376,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                     {/* Phase: Loading */}
                     {phase === 'loading' && (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
-                            <Loader size={32} className="text-violet-400 animate-spin" />
+                            <Loader size={32} className="text-amber-400 animate-spin" />
                             <p className="text-zinc-400 text-sm text-center">
                                 กำลังดึงข้อมูลจาก Google Sheets...<br/>
                                 <span className="text-[10px] opacity-50 uppercase tracking-widest">{currentBranchDisplayName.replace(/^\d\.\s*/, '')}</span>
@@ -401,7 +401,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                                 </button>
                                 <button
                                     onClick={() => loadData(localBranchId)}
-                                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-sm font-bold"
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm font-bold"
                                 >
                                     ลองใหม่
                                 </button>
@@ -428,10 +428,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                             </p>
 
                             {/* Duplicate Info */}
-                            <div className="bg-violet-500/5 border border-violet-500/20 rounded-xl p-3 space-y-2">
+                            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-2">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <CheckCircle2 size={16} className="text-violet-400" />
-                                    <span className="text-sm font-bold text-violet-400">สรุปการซิงค์ข้อมูล</span>
+                                    <CheckCircle2 size={16} className="text-amber-400" />
+                                    <span className="text-sm font-bold text-amber-400">สรุปการซิงค์ข้อมูล</span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-zinc-400">พบข้อมูลใหม่ (Append):</span>
@@ -441,7 +441,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                                     <span className="text-zinc-400">ข้อมูลที่ซ้ำกับระบบ (Skip):</span>
                                     <span className="text-rose-400 font-bold">{duplicateCount} รายการ</span>
                                 </div>
-                                <p className="text-[10px] text-zinc-500 pt-2 border-t border-violet-500/10 mt-2">
+                                <p className="text-[10px] text-zinc-500 pt-2 border-t border-amber-500/10 mt-2">
                                     * ระบบตรวจสอบความซ้ำซ้อนจาก วันที่, ประเภท, หมวดหมู่, ยอดเงิน, ช่องทาง และชื่อรายการ
                                 </p>
                             </div>
@@ -494,7 +494,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                     {/* Phase: Importing */}
                     {phase === 'importing' && (
                         <div className="flex flex-col items-center justify-center py-12 gap-4">
-                            <Loader size={32} className="text-violet-400 animate-spin" />
+                            <Loader size={32} className="text-amber-400 animate-spin" />
                             <p className="text-zinc-400 text-sm">กำลังเพิ่มข้อมูล {newTransactions.length} รายการ...</p>
                         </div>
                     )}

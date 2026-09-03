@@ -6,6 +6,6 @@
     min-height: 100vh;
   }
   body {
-    @apply bg-black text-zinc-100 selection:bg-violet-900/50 selection:text-white;
+    @apply bg-black text-zinc-100 selection:bg-amber-900/50 selection:text-white;
   }
 }

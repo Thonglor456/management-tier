@@ -188,11 +188,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">วันที่</label>
-                        <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
+                        <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-3 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-amber-500 transition-all" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">จำนวนเงิน (บาท)</label>
-                        <input type="number" min="0" step="0.01" autoFocus required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-violet-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
+                        <input type="number" min="0" step="0.01" autoFocus required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full text-4xl font-bold text-white bg-transparent border-b-2 border-zinc-800 focus:border-amber-500 outline-none py-2 placeholder-zinc-800 transition-colors" placeholder="0.00" />
                     </div>
 
                     {formType !== 'TRANSFER' && formType !== 'DIVIDEND' && (
@@ -214,7 +214,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => isManagingCats ? onEditCategory(formType, c) : setCategory(c)}
-                                            className={`w-full p-2 text-sm rounded-lg border transition-colors text-left truncate relative ${category === c && !isManagingCats ? 'bg-violet-600 border-violet-500 text-white font-bold shadow-lg shadow-violet-900/20' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'} ${isManagingCats ? 'border-dashed border-zinc-600' : ''}`}
+                                            className={`w-full p-2 text-sm rounded-lg border transition-colors text-left truncate relative ${category === c && !isManagingCats ? 'bg-amber-600 border-amber-500 text-white font-bold shadow-lg shadow-amber-900/20' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'} ${isManagingCats ? 'border-dashed border-zinc-600' : ''}`}
                                         >
                                             {c}
                                             {isManagingCats && <PenLine size={12} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-50" />}
@@ -245,7 +245,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">ช่องทาง</label>
-                        <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500">
+                        <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-amber-500">
                             {ACCOUNTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
                     </div>
@@ -253,7 +253,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                     {formType === 'TRANSFER' && (
                         <div>
                             <label className="block text-sm font-medium text-zinc-400 mb-1">ไปยังบัญชี</label>
-                            <select value={toAccount} onChange={(e) => setToAccount(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500">
+                            <select value={toAccount} onChange={(e) => setToAccount(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-amber-500">
                                 {ACCOUNTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </select>
                         </div>
@@ -261,7 +261,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-zinc-400 mb-1">รายละเอียดเพิ่มเติม</label>
-                        <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-violet-500" placeholder="ระบุรายละเอียด..." />
+                        <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 outline-none focus:ring-2 focus:ring-amber-500" placeholder="ระบุรายละเอียด..." />
                     </div>
 
                     <div className="pt-2 flex gap-3">
@@ -274,7 +274,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                 <Trash2 size={20} />
                             </button>
                         )}
-                        <button type="submit" disabled={!formBranchId || isSubmitting} className="flex-1 bg-violet-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-violet-500 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-violet-900/20">
+                        <button type="submit" disabled={!formBranchId || isSubmitting} className="flex-1 bg-amber-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-amber-500 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-900/20">
                             <Save size={20} /> {isSubmitting ? 'กำลังบันทึก...' : editingId ? 'บันทึกการแก้ไข' : 'บันทึก'}
                         </button>
                     </div>

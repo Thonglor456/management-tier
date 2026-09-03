@@ -154,7 +154,7 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
             <div className="bg-zinc-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-zinc-800 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
                 <div className="p-4 flex justify-between items-center bg-zinc-800 border-b border-zinc-700">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Calculator className="text-violet-400" /> ตรวจสอบยอดเงิน (Reconciliation)
+                        <Calculator className="text-amber-400" /> ตรวจสอบยอดเงิน (Reconciliation)
                     </h3>
                     <button onClick={onClose} className="hover:bg-white/10 p-1 rounded-full text-zinc-400 hover:text-white transition-colors">
                         <X size={24} />
@@ -192,9 +192,9 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
                             }
 
                             return (
-                                <div key={acc.id} className="grid grid-cols-12 gap-4 items-center bg-black/40 p-3 rounded-xl border border-zinc-800 hover:border-violet-500/30 transition-colors">
+                                <div key={acc.id} className="grid grid-cols-12 gap-4 items-center bg-black/40 p-3 rounded-xl border border-zinc-800 hover:border-amber-500/30 transition-colors">
                                     <div className="col-span-4 flex items-center gap-3">
-                                        <div className="p-2 bg-violet-500/10 rounded-lg text-violet-400">
+                                        <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
                                             {acc.icon}
                                         </div>
                                         <span className="font-medium text-zinc-200">{acc.name}</span>
@@ -210,7 +210,7 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
                                             value={actualInput}
                                             onChange={(e) => handleInputChange(acc.id, e.target.value)}
                                             placeholder="ระบุยอดจริง"
-                                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-right text-white outline-none focus:ring-2 focus:ring-violet-500 transition-all font-bold placeholder-zinc-700"
+                                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-right text-white outline-none focus:ring-2 focus:ring-amber-500 transition-all font-bold placeholder-zinc-700"
                                         />
                                     </div>
 
@@ -229,8 +229,8 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
                         })}
                     </div>
 
-                    <div className="mt-8 bg-violet-500/10 border border-violet-500/20 p-4 rounded-xl">
-                        <h4 className="text-violet-300 font-bold mb-2 text-sm">💡 คำแนะนำ</h4>
+                    <div className="mt-8 bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
+                        <h4 className="text-amber-300 font-bold mb-2 text-sm">💡 คำแนะนำ</h4>
                         <ul className="text-xs text-zinc-400 list-disc list-inside space-y-1">
                             <li>กรอกยอดเงินที่นับได้จริงในช่อง "นับจริง"</li>
                             <li>หากผลต่างเป็น <span className="text-emerald-400">0</span> แสดงว่ายอดเงินตรงกับระบบ (ถูกต้อง)</li>
@@ -252,7 +252,7 @@ export const ReconciliationModal: React.FC<ReconciliationModalProps> = ({
                         <button
                             onClick={handleSave}
                             disabled={isSaving || isAdjusting}
-                            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-violet-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Save size={18} />
                             {isSaving ? 'กำลังบันทึก...' : 'บันทึกการตรวจสอบ'}

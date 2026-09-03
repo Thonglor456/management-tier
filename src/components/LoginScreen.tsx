@@ -31,10 +31,10 @@ export const LoginScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-violet-500/30 selection:text-violet-200">
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-amber-500/30 selection:text-amber-200">
             {/* Animated Background Blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-800/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-800/20 rounded-full blur-[120px] animate-pulse-slow"></div>
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px] animate-pulse-slow delay-1000"></div>
                 <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] bg-indigo-600/10 rounded-full blur-[100px] animate-pulse-slow delay-2000"></div>
             </div>
@@ -45,7 +45,7 @@ export const LoginScreen: React.FC = () => {
                 {/* Header */}
                 <div className="text-center mb-10">
                     <div className="w-24 h-24 mx-auto mb-6 relative group">
-                        <div className="absolute inset-0 bg-violet-600/20 rounded-full blur-xl group-hover:bg-violet-600/30 transition-all duration-500"></div>
+                        <div className="absolute inset-0 bg-amber-600/20 rounded-full blur-xl group-hover:bg-amber-600/30 transition-all duration-500"></div>
                         <img
                             src={logo}
                             alt="Tier Coffee Logo"
@@ -61,14 +61,14 @@ export const LoginScreen: React.FC = () => {
                         <label className="text-xs font-medium text-white/50 ml-1 uppercase tracking-wider">Username</label>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <User size={18} className="text-white/30 group-focus-within:text-violet-400 transition-colors duration-300" />
+                                <User size={18} className="text-white/30 group-focus-within:text-amber-400 transition-colors duration-300" />
                             </div>
                             <input
                                 type="text"
                                 required
                                 value={loginUsername}
                                 onChange={(e) => setLoginUsername(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10 transition-all duration-300"
+                                className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-amber-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-amber-500/10 transition-all duration-300"
                                 placeholder="Enter username"
                                 disabled={isLoading}
                             />
@@ -81,14 +81,14 @@ export const LoginScreen: React.FC = () => {
                         </div>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Lock size={18} className="text-white/30 group-focus-within:text-violet-400 transition-colors duration-300" />
+                                <Lock size={18} className="text-white/30 group-focus-within:text-amber-400 transition-colors duration-300" />
                             </div>
                             <input
                                 type="password"
                                 required
                                 value={loginPassword}
                                 onChange={(e) => setLoginPassword(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-violet-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-violet-500/10 transition-all duration-300"
+                                className="w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] rounded-2xl text-white placeholder:text-white/20 outline-none focus:border-amber-500/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-amber-500/10 transition-all duration-300"
                                 placeholder="••••••••"
                                 disabled={isLoading}
                             />
@@ -105,7 +105,7 @@ export const LoginScreen: React.FC = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`w-full bg-violet-600 hover:bg-violet-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-violet-900/30 hover:shadow-violet-600/40 transition-all duration-300 transform hover:-translate-y-0.5 mt-2 flex items-center justify-center gap-2 group ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
+                        className={`w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-amber-900/30 hover:shadow-amber-600/40 transition-all duration-300 transform hover:-translate-y-0.5 mt-2 flex items-center justify-center gap-2 group ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
                     >
                         {isLoading ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
